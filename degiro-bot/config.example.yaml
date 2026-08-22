@@ -1,0 +1,30 @@
+# Copy to config.yaml and adjust. All monetary values are in account currency.
+
+symbols:
+  # DeGiro product IDs (not tickers) — find via degiro-connector's product search.
+  - product_id: "1153605"   # example: iShares Core MSCI World UCITS ETF
+    name: "IWDA"
+
+strategy:
+  # Moving-average crossover
+  fast_ma_period: 20
+  slow_ma_period: 50
+  # RSI filter — only buy when RSI is below this, only sell when above.
+  rsi_period: 14
+  rsi_buy_below: 40
+  rsi_sell_above: 60
+
+risk:
+  # Max fraction of total portfolio value to allocate to a single position.
+  max_position_pct: 0.10
+  # Stop-loss as a fraction below entry price.
+  stop_loss_pct: 0.05
+  # Circuit breaker: halt all trading for the day once realized+unrealized
+  # losses since midnight exceed this fraction of portfolio value.
+  max_daily_loss_pct: 0.03
+  # Hard cap on a single order's notional value, regardless of position sizing.
+  max_order_value: 1000
+
+schedule:
+  # How often to evaluate the strategy, in minutes.
+  interval_minutes: 15
