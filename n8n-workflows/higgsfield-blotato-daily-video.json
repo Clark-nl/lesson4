@@ -1,0 +1,347 @@
+{
+  "name": "매일 아침 - Higgsfield 영상 생성 + Blotato SNS 자동 업로드",
+  "nodes": [
+    {
+      "id": "sticky-overview",
+      "name": "안내 - 전체 흐름",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-40, 0],
+      "parameters": {
+        "width": 620,
+        "height": 300,
+        "color": 4,
+        "content": "## 전체 흐름\n1. 매일 아침 지정 시각에 자동 실행 (Schedule Trigger)\n2. 영상 주제/프롬프트 설정\n3. Higgsfield API로 영상 생성 요청\n4. 완료될 때까지 폴링(Wait + 상태 확인 반복)\n5. Blotato API로 영상 업로드\n6. Blotato API로 여러 SNS 채널에 자동 게시\n7. (TODO) 옴니라우트 연계 - 아직 어떤 서비스인지 확인이 필요해 자리만 만들어 두었습니다.\n\n실행 전 n8n Credentials에 Higgsfield / Blotato API 키를 등록하세요."
+      }
+    },
+    {
+      "id": "sched-trigger-1",
+      "name": "매일 아침 실행",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-40, 340],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "set-config-1",
+      "name": "영상 주제 설정",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [200, 340],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prompt-field",
+              "name": "prompt",
+              "type": "string",
+              "value": "오늘의 영상 주제를 여기에 입력하세요 (예: 하루를 시작하는 아침 루틴 브이로그 스타일 숏폼)"
+            },
+            {
+              "id": "model-field",
+              "name": "model",
+              "type": "string",
+              "value": "higgsfield-video-model-id"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "sticky-higgsfield",
+      "name": "안내 - Higgsfield 설정",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [420, 0],
+      "parameters": {
+        "width": 620,
+        "height": 300,
+        "color": 5,
+        "content": "## Higgsfield 설정 필요\n- docs.higgsfield.ai 에서 최신 엔드포인트/모델명/인증 헤더 형식을 확인하세요.\n- 일반적으로 Authorization 헤더에 `Key {KEY_ID}:{KEY_SECRET}` 형식을 사용합니다.\n- n8n Credentials > Header Auth 를 만들어 HTTP Request 노드에 연결하세요.\n- 생성은 비동기(async)이므로 작업 ID를 받은 뒤 상태를 폴링해야 합니다."
+      }
+    },
+    {
+      "id": "http-higgsfield-create",
+      "name": "Higgsfield - 영상 생성 요청",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 340],
+      "parameters": {
+        "method": "POST",
+        "url": "https://docs.higgsfield.ai/REPLACE_WITH_ACTUAL_GENERATE_ENDPOINT",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"{{$json.model}}\",\n  \"prompt\": \"{{$json.prompt}}\"\n}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_ME",
+          "name": "Higgsfield API Key"
+        }
+      }
+    },
+    {
+      "id": "wait-poll-1",
+      "name": "생성 대기",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [660, 340],
+      "webhookId": "REPLACE_ME_IF_NEEDED",
+      "parameters": {
+        "amount": 30,
+        "unit": "seconds"
+      }
+    },
+    {
+      "id": "http-higgsfield-status",
+      "name": "Higgsfield - 상태 확인",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 340],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://docs.higgsfield.ai/REPLACE_WITH_STATUS_ENDPOINT/{{$('Higgsfield - 영상 생성 요청').item.json.id}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_ME",
+          "name": "Higgsfield API Key"
+        }
+      }
+    },
+    {
+      "id": "if-failed-1",
+      "name": "생성 실패?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1100, 340],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-failed",
+              "leftValue": "={{$json.status}}",
+              "rightValue": "failed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "noop-failed-1",
+      "name": "생성 실패 처리",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1320, 480],
+      "parameters": {}
+    },
+    {
+      "id": "if-completed-1",
+      "name": "생성 완료?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1320, 220],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-completed",
+              "leftValue": "={{$json.status}}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "sticky-blotato",
+      "name": "안내 - Blotato 설정",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1540, -140],
+      "parameters": {
+        "width": 620,
+        "height": 300,
+        "color": 6,
+        "content": "## Blotato 설정 필요\n- help.blotato.com/api/start 에서 API 키 발급 및 인증 헤더 확인.\n- 공식 n8n 커뮤니티 노드(@blotato/n8n-nodes-blotato)를 설치하면 이 HTTP Request 노드 2개를 해당 노드로 교체해 더 쉽게 쓸 수 있습니다.\n- targetIds/platform 값은 Blotato 대시보드에서 연결한 계정 ID로 교체하세요 (Instagram/TikTok/YouTube/Threads 등)."
+      }
+    },
+    {
+      "id": "http-blotato-upload",
+      "name": "Blotato - 미디어 업로드",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.blotato.com/v2/media",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"{{$json.videoUrl}}\"\n}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_ME",
+          "name": "Blotato API Key"
+        }
+      }
+    },
+    {
+      "id": "http-blotato-post",
+      "name": "Blotato - SNS 자동 게시",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1760, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "https://backend.blotato.com/v2/posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"mediaUrls\": [\"{{$json.url}}\"],\n  \"targets\": [\n    { \"platform\": \"instagram\", \"accountId\": \"REPLACE_ME\" },\n    { \"platform\": \"tiktok\", \"accountId\": \"REPLACE_ME\" },\n    { \"platform\": \"youtube\", \"accountId\": \"REPLACE_ME\" }\n  ]\n}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_ME",
+          "name": "Blotato API Key"
+        }
+      }
+    },
+    {
+      "id": "sticky-omniroute",
+      "name": "안내 - 옴니라우트 (TODO)",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1980, -140],
+      "parameters": {
+        "width": 400,
+        "height": 300,
+        "color": 3,
+        "content": "## 옴니라우트 연계 (TODO)\n어떤 시스템/서비스인지 아직 확인되지 않아 자리표시자만 만들어 두었습니다.\n정보를 알려주시면 (API/Webhook 문서, URL 등) 이 NoOp 노드를 실제 연동 노드로 교체하겠습니다."
+      }
+    },
+    {
+      "id": "noop-omniroute",
+      "name": "옴니라우트 연계 (TODO)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1980, 220],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "매일 아침 실행": {
+      "main": [
+        [
+          { "node": "영상 주제 설정", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "영상 주제 설정": {
+      "main": [
+        [
+          { "node": "Higgsfield - 영상 생성 요청", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Higgsfield - 영상 생성 요청": {
+      "main": [
+        [
+          { "node": "생성 대기", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "생성 대기": {
+      "main": [
+        [
+          { "node": "Higgsfield - 상태 확인", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Higgsfield - 상태 확인": {
+      "main": [
+        [
+          { "node": "생성 실패?", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "생성 실패?": {
+      "main": [
+        [
+          { "node": "생성 실패 처리", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "생성 완료?", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "생성 완료?": {
+      "main": [
+        [
+          { "node": "Blotato - 미디어 업로드", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "생성 대기", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Blotato - 미디어 업로드": {
+      "main": [
+        [
+          { "node": "Blotato - SNS 자동 게시", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Blotato - SNS 자동 게시": {
+      "main": [
+        [
+          { "node": "옴니라우트 연계 (TODO)", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "lesson4-higgsfield-blotato-daily"
+  }
+}
