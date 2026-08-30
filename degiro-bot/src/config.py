@@ -49,16 +49,25 @@ class Config:
     credentials: Credentials = field(repr=False)
 
 
-def load_config(config_path: str | Path = BASE_DIR / "config.yaml",
-                 env_path: str | Path = BASE_DIR / ".env") -> Config:
-    load_dotenv(env_path)
-
+def load_strategy_and_risk(config_path: str | Path = BASE_DIR / "config.yaml"
+                            ) -> tuple[list[Symbol], StrategyConfig, RiskConfig, int]:
+    """Load just the strategy/risk/symbols section, with no .env/credentials
+    requirement. Used by the backtester, which never touches a real account."""
     with open(config_path, "r", encoding="utf-8") as f:
         raw = yaml.safe_load(f)
 
     symbols = [Symbol(**s) for s in raw["symbols"]]
     strategy = StrategyConfig(**raw["strategy"])
     risk = RiskConfig(**raw["risk"])
+    interval_minutes = raw["schedule"]["interval_minutes"]
+    return symbols, strategy, risk, interval_minutes
+
+
+def load_config(config_path: str | Path = BASE_DIR / "config.yaml",
+                 env_path: str | Path = BASE_DIR / ".env") -> Config:
+    load_dotenv(env_path)
+
+    symbols, strategy, risk, interval_minutes = load_strategy_and_risk(config_path)
 
     int_account_raw = os.environ.get("DEGIRO_INT_ACCOUNT", "").strip()
 
@@ -80,6 +89,6 @@ def load_config(config_path: str | Path = BASE_DIR / "config.yaml",
         symbols=symbols,
         strategy=strategy,
         risk=risk,
-        interval_minutes=raw["schedule"]["interval_minutes"],
+        interval_minutes=interval_minutes,
         credentials=credentials,
     )

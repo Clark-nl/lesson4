@@ -93,6 +93,24 @@ journalctl -u degiro-bot -f         # 로그 확인
 
 `deploy/degiro-bot.service`는 `Restart=on-failure`로 크래시 시 자동 재시작하며, 전용 비루트 사용자(`degirobot`)로 실행합니다. 경로(`/opt/degiro-bot`)는 실제 배포 위치에 맞게 수정하세요.
 
+## 백테스트: S&P 500과 비교
+
+실거래 전에, 과거 데이터로 이 전략이 S&P 500 매수 후 보유(buy & hold)보다 나은지 확인할 수 있습니다.
+
+```bash
+pip install yfinance   # 로컬 CSV를 쓸 경우 불필요
+
+python -m scripts.run_backtest --yf-symbol IWDA.AS --yf-benchmark ^GSPC --years 5
+# 또는 로컬 CSV로 (date,close 컬럼):
+python -m scripts.run_backtest --symbol-csv data/iwda.csv --benchmark-csv data/spx.csv
+```
+
+DeGiro 계좌 없이 순수 가격 데이터만으로 동작하며, 주문도 넣지 않습니다. 백테스트 엔진(`src/backtest.py`)은 실거래 봇과 **동일한** `size_order`/`stop_loss_triggered` 로직을 재사용하므로, 여기서 나온 결과가 실제 봇의 동작과 어긋나지 않습니다.
+
+⚠️ **이 샌드박스 환경은 외부 네트워크(Yahoo Finance 등)에 접근할 수 없어, 실제 과거 데이터로 결과를 직접 확인하지는 못했습니다.** 대신 합성 데이터로 CLI 자체는 끝까지 실행해 동작을 검증했고, 그 과정에서 한 가지를 발견했습니다:
+
+**기본 설정(`config.example.yaml`)의 RSI 필터는 사실상 거래가 거의 안 나오는 조합입니다.** "골든크로스(최근 상승 모멘텀) + RSI가 낮음(과매도)"은 서로 잘 안 겹치는 조건이라, 대부분의 기간에서 매수 신호 자체가 거의 발생하지 않습니다 — 신호가 없으면 계속 현금 보유 상태라 S&P 500을 이길 수가 없습니다. 실거래 전에 `config.yaml`의 `rsi_buy_below`/`rsi_sell_above`를 조정해서 실제로 거래가 발생하는지, 그리고 그 결과가 지수를 이기는지 백테스트로 먼저 확인하는 걸 권장합니다.
+
 ## 테스트
 
 전략/리스크/지표 로직은 DeGiro 연결 없이 순수 함수로 테스트할 수 있습니다:
@@ -119,7 +137,11 @@ degiro-bot/
 │   ├── strategy.py          # 매매 신호 생성
 │   ├── risk.py               # 포지션 사이징, 손절, 일일 손실 서킷 브레이커
 │   ├── degiro_client.py     # degiro-connector 래퍼 (인증/시세/주문)
+│   ├── vector_strategy.py  # 백테스트용 벡터화 신호 생성 (strategy.py와 결과 일치 검증됨)
+│   ├── backtest.py           # 백테스트 엔진 (실거래와 동일한 risk 로직 재사용)
 │   └── bot.py                 # 메인 루프
-├── scripts/inspect_account.py # 실거래 전 읽기 전용 계좌 연결 확인
-└── tests/                     # indicators/strategy/risk 단위 테스트
+├── scripts/
+│   ├── inspect_account.py  # 실거래 전 읽기 전용 계좌 연결 확인
+│   └── run_backtest.py      # S&P 500 대비 백테스트 CLI
+└── tests/                     # indicators/strategy/risk/backtest 단위 테스트
 ```

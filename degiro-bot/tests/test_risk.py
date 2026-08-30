@@ -35,7 +35,7 @@ def test_buy_rejected_when_position_already_at_cap():
     assert not plan.approved
 
 
-def test_circuit_breaker_trips_on_large_drawdown():
+def test_circuit_breaker_blocks_new_buys_on_large_drawdown():
     breaker = make_breaker()
     breaker.update(100_000)
     breaker.update(96_000)  # 4% drawdown > 3% max_daily_loss_pct
@@ -47,6 +47,48 @@ def test_circuit_breaker_trips_on_large_drawdown():
     )
     assert not plan.approved
     assert "circuit breaker" in plan.reason
+
+
+def test_circuit_breaker_never_blocks_selling_out_of_a_position():
+    # A tripped breaker must not trap you in a losing position: it should
+    # only stop new risk (BUY), never an exit (SELL).
+    breaker = make_breaker()
+    breaker.update(100_000)
+    breaker.update(96_000)
+    assert breaker.tripped
+
+    plan = size_order(
+        side="SELL", price=50, portfolio_value=96_000, cash_available=0,
+        current_position_value=1000, risk=RISK, circuit_breaker=breaker,
+        held_quantity=20,
+    )
+    assert plan.approved
+    assert plan.quantity == 20
+
+
+def test_sell_liquidates_full_position_even_above_max_order_value():
+    # Exits are risk-reducing and must not be capped like entries: a stop-loss
+    # on a position worth more than max_order_value must still fully exit.
+    breaker = make_breaker()
+    breaker.update(100_000)
+    plan = size_order(
+        side="SELL", price=50, portfolio_value=100_000, cash_available=0,
+        current_position_value=5000, risk=RISK, circuit_breaker=breaker,
+        held_quantity=100,  # worth 5000, well above max_order_value=1000
+    )
+    assert plan.approved
+    assert plan.quantity == 100
+
+
+def test_sell_rejected_with_nothing_held():
+    breaker = make_breaker()
+    breaker.update(100_000)
+    plan = size_order(
+        side="SELL", price=50, portfolio_value=100_000, cash_available=0,
+        current_position_value=0, risk=RISK, circuit_breaker=breaker,
+        held_quantity=0,
+    )
+    assert not plan.approved
 
 
 def test_circuit_breaker_resets_next_day():

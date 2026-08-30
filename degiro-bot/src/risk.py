@@ -34,14 +34,18 @@ class DailyLossCircuitBreaker:
 
 def size_order(*, side: str, price: float, portfolio_value: float,
                 cash_available: float, current_position_value: float,
-                risk: RiskConfig, circuit_breaker: DailyLossCircuitBreaker) -> OrderPlan:
-    if circuit_breaker.tripped:
-        return OrderPlan(False, 0, "daily loss circuit breaker tripped; no new orders today")
-
+                risk: RiskConfig, circuit_breaker: DailyLossCircuitBreaker,
+                held_quantity: int = 0) -> OrderPlan:
     if price <= 0:
         return OrderPlan(False, 0, "invalid price")
 
     if side == "BUY":
+        # The circuit breaker only blocks *new* risk. It must never block a
+        # SELL: refusing to exit a losing position during a bad day would
+        # turn a daily loss limit into a reason to hold through further losses.
+        if circuit_breaker.tripped:
+            return OrderPlan(False, 0, "daily loss circuit breaker tripped; no new orders today")
+
         max_position_value = portfolio_value * risk.max_position_pct
         room_left = max(max_position_value - current_position_value, 0)
         budget = min(room_left, cash_available, risk.max_order_value)
@@ -51,13 +55,12 @@ def size_order(*, side: str, price: float, portfolio_value: float,
         return OrderPlan(True, quantity, f"buy {quantity} @ {price:.2f} (budget {budget:.2f})")
 
     if side == "SELL":
-        # Selling reduces risk, so it is not subject to the position-size cap,
-        # only to the hard per-order notional cap.
-        max_notional = risk.max_order_value
-        quantity = int(max_notional // price) if max_notional > 0 else 0
-        if quantity <= 0:
-            return OrderPlan(False, 0, "max_order_value too small to sell at this price")
-        return OrderPlan(True, quantity, f"sell up to {quantity} @ {price:.2f}")
+        # Exits are risk-reducing, so the full held position is sold in one
+        # order — capping a sell at max_order_value (an entry-risk control)
+        # would leave part of a stop-loss or sell signal unexecuted.
+        if held_quantity <= 0:
+            return OrderPlan(False, 0, "no position held to sell")
+        return OrderPlan(True, held_quantity, f"sell {held_quantity} @ {price:.2f} (full exit)")
 
     return OrderPlan(False, 0, f"unknown side: {side}")
 

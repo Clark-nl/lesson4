@@ -18,6 +18,7 @@ class TradingBot:
         self.client = client
         self.circuit_breaker = DailyLossCircuitBreaker(config.risk)
         self.entry_prices: dict[str, float] = {}
+        self.holdings: dict[str, int] = {}
         self._current_day = date.today()
 
     def run_once(self) -> None:
@@ -47,10 +48,13 @@ class TradingBot:
         position_value = self.client.get_position_value(symbol.product_id)
 
         entry_price = self.entry_prices.get(symbol.product_id)
-        if entry_price and position_value > 0 and stop_loss_triggered(entry_price, current_price, self.config.risk):
-            self._submit(symbol, "SELL", current_price, portfolio_value, cash_available, position_value,
-                         reason="stop-loss triggered")
-            self.entry_prices.pop(symbol.product_id, None)
+        held_quantity = self.holdings.get(symbol.product_id, 0)
+        if entry_price and held_quantity > 0 and stop_loss_triggered(entry_price, current_price, self.config.risk):
+            filled = self._submit(symbol, "SELL", current_price, portfolio_value, cash_available, position_value,
+                                   held_quantity=held_quantity, reason="stop-loss triggered")
+            if filled:
+                self.entry_prices.pop(symbol.product_id, None)
+                self.holdings.pop(symbol.product_id, None)
             return
 
         result = evaluate(prices, self.config.strategy)
@@ -61,13 +65,19 @@ class TradingBot:
             return
 
         side = result.signal.value
-        self._submit(symbol, side, current_price, portfolio_value, cash_available, position_value,
-                     reason=result.reason)
+        filled_quantity = self._submit(symbol, side, current_price, portfolio_value, cash_available, position_value,
+                                        held_quantity=held_quantity, reason=result.reason)
+        if not filled_quantity:
+            return
         if side == "BUY":
             self.entry_prices[symbol.product_id] = current_price
+            self.holdings[symbol.product_id] = self.holdings.get(symbol.product_id, 0) + filled_quantity
+        else:
+            self.entry_prices.pop(symbol.product_id, None)
+            self.holdings.pop(symbol.product_id, None)
 
     def _submit(self, symbol, side: str, price: float, portfolio_value: float,
-                cash_available: float, position_value: float, *, reason: str) -> None:
+                cash_available: float, position_value: float, *, held_quantity: int, reason: str) -> int:
         plan = size_order(
             side=side,
             price=price,
@@ -76,21 +86,23 @@ class TradingBot:
             current_position_value=position_value,
             risk=self.config.risk,
             circuit_breaker=self.circuit_breaker,
+            held_quantity=held_quantity,
         )
         if not plan.approved:
             logger.info("%s %s rejected by risk manager: %s", side, symbol.name, plan.reason)
-            return
+            return 0
 
         if not self.config.credentials.risk_confirmed:
             logger.warning(
                 "I_UNDERSTAND_THE_RISK is not set to true in .env — order NOT sent. "
                 "Would have %s %s x%d (%s)", side, symbol.name, plan.quantity, reason,
             )
-            return
+            return 0
 
         order_id = self.client.place_order(product_id=symbol.product_id, side=side, quantity=plan.quantity)
         logger.info("Order submitted: %s %s x%d -> order_id=%s (%s)",
                     side, symbol.name, plan.quantity, order_id, reason)
+        return plan.quantity
 
 
 def main() -> None:
