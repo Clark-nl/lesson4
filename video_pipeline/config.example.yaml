@@ -1,0 +1,41 @@
+# 영상 자동 생성 파이프라인 설정 예제
+topic: "가을 캠핑 브이로그 하이라이트"
+num_scenes: 5
+aspect_ratios: ["9:16", "1:1", "16:9"]
+output_dir: "output"
+
+# 아래 4개는 각각 독립적으로 mock <-> 실제 서비스로 교체 가능
+script_provider: mock        # mock | anthropic
+image_provider: mock         # mock | openai
+video_provider: local_kenburns  # local_kenburns(무료/로컬) | http_generic(Runway/Kling/Pika/Higgsfield 등 REST API)
+tts_provider: mock           # mock | openai
+
+providers:
+  anthropic:
+    model: "claude-sonnet-5"
+
+  openai_image:
+    model: "dall-e-3"
+    size: "1024x1792"
+
+  openai_tts:
+    model: "tts-1"
+    voice: "alloy"
+
+  local_kenburns:
+    fps: 30
+
+  # video_provider: http_generic 사용 시 예시. base_url / api_key_env / 필드명만 바꾸면
+  # Runway, Kling, Pika, Luma, Higgsfield 등 다른 image-to-video 벤더로 교체 가능.
+  http_generic:
+    base_url: "https://api.example-video-ai.com/v1"
+    api_key_env: "VIDEO_API_KEY"
+    create_field_map:
+      model: "default"
+      duration: 4
+    poll_field: "id"
+    status_field: "status"
+    result_field: "output_url"
+    done_values: ["succeeded", "completed"]
+
+  # background_music: "assets/bgm.mp3"
