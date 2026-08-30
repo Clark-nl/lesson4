@@ -111,6 +111,18 @@ DeGiro 계좌 없이 순수 가격 데이터만으로 동작하며, 주문도 �
 
 **기본 설정(`config.example.yaml`)의 RSI 필터는 사실상 거래가 거의 안 나오는 조합입니다.** "골든크로스(최근 상승 모멘텀) + RSI가 낮음(과매도)"은 서로 잘 안 겹치는 조건이라, 대부분의 기간에서 매수 신호 자체가 거의 발생하지 않습니다 — 신호가 없으면 계속 현금 보유 상태라 S&P 500을 이길 수가 없습니다. 실거래 전에 `config.yaml`의 `rsi_buy_below`/`rsi_sell_above`를 조정해서 실제로 거래가 발생하는지, 그리고 그 결과가 지수를 이기는지 백테스트로 먼저 확인하는 걸 권장합니다.
 
+## 파라미터 튜닝 (그리드서치 + 아웃오브샘플 검증)
+
+전략이 거의 거래를 안 하거나 지수를 못 이긴다면, 파라미터를 자동으로 여러 조합 돌려서 어떤 조합이 나은지 찾을 수 있습니다.
+
+```bash
+python -m scripts.optimize_strategy --yf-symbol IWDA.AS --yf-benchmark ^GSPC --years 8
+```
+
+`fast_ma_period`/`slow_ma_period`/`rsi_buy_below`/`rsi_sell_above` 조합을 그리드로 돌려 학습 구간(기본 70%)에서 수익률 상위 5개를 뽑고, **한 번도 보지 않은 나머지 구간(테스트 구간)에서 다시 검증**합니다.
+
+⚠️ **과최적화(overfitting) 주의**: 학습 구간에서 1등인 조합이 테스트 구간에서도 이긴다는 보장은 전혀 없습니다 (실제로 합성 데이터로 돌려보면 학습 구간 1위 조합들이 테스트 구간에서는 대부분 지는 걸 확인했습니다). **학습·테스트 구간 모두에서 지수를 이기는 조합만 신뢰**하세요. 그런 조합이 하나도 없다면, 이 전략 형태(이동평균 교차 + RSI) 자체가 이 종목/기간에서 지수를 이기기 어렵다는 뜻일 수 있습니다 — 그 결과도 유의미한 정보입니다.
+
 ## 테스트
 
 전략/리스크/지표 로직은 DeGiro 연결 없이 순수 함수로 테스트할 수 있습니다:
@@ -139,9 +151,11 @@ degiro-bot/
 │   ├── degiro_client.py     # degiro-connector 래퍼 (인증/시세/주문)
 │   ├── vector_strategy.py  # 백테스트용 벡터화 신호 생성 (strategy.py와 결과 일치 검증됨)
 │   ├── backtest.py           # 백테스트 엔진 (실거래와 동일한 risk 로직 재사용)
+│   ├── optimize.py            # 파라미터 그리드서치 + train/test 분할
 │   └── bot.py                 # 메인 루프
 ├── scripts/
 │   ├── inspect_account.py  # 실거래 전 읽기 전용 계좌 연결 확인
-│   └── run_backtest.py      # S&P 500 대비 백테스트 CLI
+│   ├── run_backtest.py      # S&P 500 대비 백테스트 CLI
+│   └── optimize_strategy.py # 파라미터 튜닝 + 아웃오브샘플 검증 CLI
 └── tests/                     # indicators/strategy/risk/backtest 단위 테스트
 ```
