@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아이디어 수익화 플랫폼</title>
+<style>
+  :root{
+    --bg:#0f1115;
+    --panel:#161923;
+    --panel-2:#1d2130;
+    --border:#2a2f3f;
+    --text:#e8eaf0;
+    --text-dim:#9aa0b4;
+    --accent:#6c8cff;
+    --accent-2:#5ce6c2;
+    --warn:#ffb454;
+    --danger:#ff6b6b;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Pretendard",Roboto,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+  }
+  header{
+    padding:24px 32px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  header h1{
+    margin:0;
+    font-size:1.4rem;
+  }
+  header p{
+    margin:4px 0 0;
+    color:var(--text-dim);
+    font-size:0.9rem;
+  }
+  .layout{
+    display:grid;
+    grid-template-columns:360px 1fr;
+    gap:20px;
+    padding:24px 32px 48px;
+    max-width:1400px;
+    margin:0 auto;
+  }
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr;}
+  }
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px;
+  }
+  .card h2{
+    margin:0 0 16px;
+    font-size:1.05rem;
+  }
+  label{
+    display:block;
+    font-size:0.82rem;
+    color:var(--text-dim);
+    margin:14px 0 6px;
+  }
+  input,select,textarea{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:9px 10px;
+    border-radius:8px;
+    font-size:0.9rem;
+    font-family:inherit;
+  }
+  textarea{resize:vertical;min-height:60px;}
+  .range-row{display:flex;align-items:center;gap:10px;}
+  .range-row input[type=range]{flex:1;}
+  .range-val{width:28px;text-align:right;font-variant-numeric:tabular-nums;color:var(--accent-2);font-weight:600;}
+  button.primary{
+    margin-top:18px;
+    width:100%;
+    background:linear-gradient(135deg,var(--accent),#8f6cff);
+    color:#fff;
+    border:none;
+    padding:11px;
+    border-radius:8px;
+    font-size:0.95rem;
+    font-weight:600;
+    cursor:pointer;
+  }
+  button.primary:hover{filter:brightness(1.08);}
+
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+    margin-bottom:20px;
+  }
+  @media (max-width:700px){.stats{grid-template-columns:repeat(2,1fr);}}
+  .stat{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px;
+  }
+  .stat .label{color:var(--text-dim);font-size:0.78rem;}
+  .stat .value{font-size:1.5rem;font-weight:700;margin-top:4px;}
+  .stat .value.accent{color:var(--accent-2);}
+
+  .toolbar{
+    display:flex;
+    gap:10px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .toolbar select{width:auto;}
+  .toolbar .spacer{flex:1;}
+  .pill-empty{color:var(--text-dim);font-size:0.85rem;}
+
+  .board{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:12px;
+  }
+  @media (max-width:1150px){.board{grid-template-columns:repeat(2,1fr);}}
+  .stage{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:12px;
+    min-height:120px;
+  }
+  .stage-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:0.82rem;
+    font-weight:600;
+    color:var(--text-dim);
+    margin-bottom:10px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--border);
+  }
+  .stage.dragover{outline:2px dashed var(--accent);outline-offset:-4px;}
+
+  .idea-card{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px;
+    margin-bottom:10px;
+    cursor:grab;
+  }
+  .idea-card:active{cursor:grabbing;}
+  .idea-card .top-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+  }
+  .idea-card .title{font-weight:600;font-size:0.92rem;}
+  .idea-card .score{
+    flex-shrink:0;
+    font-size:0.75rem;
+    font-weight:700;
+    padding:2px 7px;
+    border-radius:999px;
+    background:rgba(108,140,255,0.15);
+    color:var(--accent);
+  }
+  .idea-card .score.high{background:rgba(92,230,194,0.15);color:var(--accent-2);}
+  .idea-card .score.low{background:rgba(255,107,107,0.15);color:var(--danger);}
+  .idea-card .desc{
+    color:var(--text-dim);
+    font-size:0.8rem;
+    margin-top:6px;
+    line-height:1.4;
+  }
+  .idea-card .meta{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-top:8px;
+  }
+  .tag{
+    font-size:0.7rem;
+    padding:2px 7px;
+    border-radius:999px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    color:var(--text-dim);
+  }
+  .idea-card .actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:8px;
+  }
+  .idea-card .actions button{
+    background:none;
+    border:none;
+    color:var(--text-dim);
+    cursor:pointer;
+    font-size:0.75rem;
+    padding:2px 4px;
+  }
+  .idea-card .actions button:hover{color:var(--danger);}
+
+  footer{
+    text-align:center;
+    color:var(--text-dim);
+    font-size:0.78rem;
+    padding:20px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>💡 아이디어 수익화 플랫폼</h1>
+    <p>아이디어를 등록하고, 자동화 가능성과 매출 잠재력으로 점수를 매겨 우선순위를 정하세요.</p>
+  </div>
+</header>
+
+<div class="layout">
+
+  <div class="card">
+    <h2>새 아이디어 등록</h2>
+    <form id="idea-form">
+      <label>제목</label>
+      <input type="text" id="f-title" placeholder="예: 뉴스레터 자동 요약 봇" required>
+
+      <label>설명</label>
+      <textarea id="f-desc" placeholder="아이디어에 대한 간단한 설명"></textarea>
+
+      <label>카테고리</label>
+      <select id="f-category">
+        <option value="자동화 도구">자동화 도구</option>
+        <option value="콘텐츠/구독">콘텐츠/구독</option>
+        <option value="SaaS/서비스">SaaS/서비스</option>
+        <option value="컨설팅/대행">컨설팅/대행</option>
+        <option value="기타">기타</option>
+      </select>
+
+      <label>예상 매출 잠재력 (1~10)</label>
+      <div class="range-row">
+        <input type="range" id="f-revenue" min="1" max="10" value="5">
+        <span class="range-val" id="f-revenue-val">5</span>
+      </div>
+
+      <label>구현 난이도 (1~10, 낮을수록 쉬움)</label>
+      <div class="range-row">
+        <input type="range" id="f-effort" min="1" max="10" value="5">
+        <span class="range-val" id="f-effort-val">5</span>
+      </div>
+
+      <label>자동화 적합도 (1~10)</label>
+      <div class="range-row">
+        <input type="range" id="f-automation" min="1" max="10" value="5">
+        <span class="range-val" id="f-automation-val">5</span>
+      </div>
+
+      <button type="submit" class="primary">아이디어 추가</button>
+    </form>
+  </div>
+
+  <div>
+    <div class="stats">
+      <div class="stat">
+        <div class="label">전체 아이디어</div>
+        <div class="value" id="stat-total">0</div>
+      </div>
+      <div class="stat">
+        <div class="label">평균 우선순위 점수</div>
+        <div class="value accent" id="stat-avg">0</div>
+      </div>
+      <div class="stat">
+        <div class="label">수익창출중</div>
+        <div class="value" id="stat-live">0</div>
+      </div>
+      <div class="stat">
+        <div class="label">최고 점수 아이디어</div>
+        <div class="value" id="stat-top" style="font-size:1rem;">-</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <select id="sort-select">
+        <option value="score-desc">점수 높은순</option>
+        <option value="score-asc">점수 낮은순</option>
+        <option value="newest">최신순</option>
+      </select>
+      <select id="filter-category">
+        <option value="">전체 카테고리</option>
+        <option value="자동화 도구">자동화 도구</option>
+        <option value="콘텐츠/구독">콘텐츠/구독</option>
+        <option value="SaaS/서비스">SaaS/서비스</option>
+        <option value="컨설팅/대행">컨설팅/대행</option>
+        <option value="기타">기타</option>
+      </select>
+      <div class="spacer"></div>
+      <span class="pill-empty">카드를 드래그해서 단계를 이동하세요</span>
+    </div>
+
+    <div class="board" id="board"></div>
+  </div>
+
+</div>
+
+<footer>로컬 브라우저(localStorage)에 저장됩니다. 서버 없이 동작합니다.</footer>
+
+<script>
+(function(){
+  const STAGES = [
+    {key:'idea', label:'💭 아이디어'},
+    {key:'validate', label:'🔍 검증중'},
+    {key:'build', label:'🛠 개발중'},
+    {key:'launch', label:'🚀 출시'},
+    {key:'revenue', label:'💰 수익창출중'}
+  ];
+  const STORAGE_KEY = 'idea-monetization-platform';
+
+  let ideas = load();
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ return []; }
+  }
+  function save(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ideas));
+  }
+  function uid(){
+    return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,7);
+  }
+  function calcScore(revenue, effort, automation){
+    // revenue and automation raise priority, effort lowers it
+    const raw = (revenue * 0.5) + (automation * 0.3) + ((11 - effort) * 0.2);
+    return Math.round(raw * 10) / 10;
+  }
+
+  const form = document.getElementById('idea-form');
+  const revRange = document.getElementById('f-revenue');
+  const effRange = document.getElementById('f-effort');
+  const autoRange = document.getElementById('f-automation');
+  [ [revRange,'f-revenue-val'], [effRange,'f-effort-val'], [autoRange,'f-automation-val'] ]
+    .forEach(([el,id])=>{
+      el.addEventListener('input', ()=>{ document.getElementById(id).textContent = el.value; });
+    });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const title = document.getElementById('f-title').value.trim();
+    if(!title) return;
+    const revenue = Number(revRange.value);
+    const effort = Number(effRange.value);
+    const automation = Number(autoRange.value);
+    ideas.push({
+      id: uid(),
+      title,
+      desc: document.getElementById('f-desc').value.trim(),
+      category: document.getElementById('f-category').value,
+      revenue, effort, automation,
+      score: calcScore(revenue, effort, automation),
+      stage: 'idea',
+      createdAt: Date.now()
+    });
+    save();
+    form.reset();
+    [revRange,effRange,autoRange].forEach(el=>{
+      el.value = 5;
+      document.getElementById(el.id+'-val').textContent = 5;
+    });
+    render();
+  });
+
+  document.getElementById('sort-select').addEventListener('change', render);
+  document.getElementById('filter-category').addEventListener('change', render);
+
+  function scoreClass(score){
+    if(score >= 7) return 'high';
+    if(score <= 4) return 'low';
+    return '';
+  }
+
+  function render(){
+    // stats
+    const total = ideas.length;
+    const avg = total ? Math.round((ideas.reduce((s,i)=>s+i.score,0)/total)*10)/10 : 0;
+    const live = ideas.filter(i=>i.stage==='revenue').length;
+    const top = ideas.slice().sort((a,b)=>b.score-a.score)[0];
+
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-avg').textContent = avg;
+    document.getElementById('stat-live').textContent = live;
+    document.getElementById('stat-top').textContent = top ? top.title : '-';
+
+    // filter/sort
+    const sortMode = document.getElementById('sort-select').value;
+    const catFilter = document.getElementById('filter-category').value;
+    let filtered = ideas.filter(i => !catFilter || i.category === catFilter);
+    if(sortMode === 'score-desc') filtered.sort((a,b)=>b.score-a.score);
+    else if(sortMode === 'score-asc') filtered.sort((a,b)=>a.score-b.score);
+    else filtered.sort((a,b)=>b.createdAt-a.createdAt);
+
+    const board = document.getElementById('board');
+    board.innerHTML = '';
+
+    STAGES.forEach(stage => {
+      const col = document.createElement('div');
+      col.className = 'stage';
+      col.dataset.stage = stage.key;
+
+      const stageIdeas = filtered.filter(i => i.stage === stage.key);
+
+      const head = document.createElement('div');
+      head.className = 'stage-head';
+      head.innerHTML = `<span>${stage.label}</span><span>${stageIdeas.length}</span>`;
+      col.appendChild(head);
+
+      stageIdeas.forEach(idea => {
+        col.appendChild(renderCard(idea));
+      });
+
+      col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('dragover'); });
+      col.addEventListener('dragleave', () => col.classList.remove('dragover'));
+      col.addEventListener('drop', e => {
+        e.preventDefault();
+        col.classList.remove('dragover');
+        const id = e.dataTransfer.getData('text/plain');
+        const idea = ideas.find(i => i.id === id);
+        if(idea){ idea.stage = stage.key; save(); render(); }
+      });
+
+      board.appendChild(col);
+    });
+  }
+
+  function renderCard(idea){
+    const card = document.createElement('div');
+    card.className = 'idea-card';
+    card.draggable = true;
+    card.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', idea.id);
+    });
+
+    const sc = document.createElement('div');
+    sc.className = 'top-row';
+    sc.innerHTML = `
+      <div class="title"></div>
+      <div class="score ${scoreClass(idea.score)}">${idea.score}</div>
+    `;
+    sc.querySelector('.title').textContent = idea.title;
+    card.appendChild(sc);
+
+    if(idea.desc){
+      const d = document.createElement('div');
+      d.className = 'desc';
+      d.textContent = idea.desc;
+      card.appendChild(d);
+    }
+
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.innerHTML = `
+      <span class="tag">${idea.category}</span>
+      <span class="tag">매출 ${idea.revenue}</span>
+      <span class="tag">난이도 ${idea.effort}</span>
+      <span class="tag">자동화 ${idea.automation}</span>
+    `;
+    card.appendChild(meta);
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    const del = document.createElement('button');
+    del.textContent = '삭제';
+    del.addEventListener('click', () => {
+      ideas = ideas.filter(i => i.id !== idea.id);
+      save();
+      render();
+    });
+    actions.appendChild(del);
+    card.appendChild(actions);
+
+    return card;
+  }
+
+  render();
+})();
+</script>
+
+</body>
+</html>

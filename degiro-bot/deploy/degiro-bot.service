@@ -1,0 +1,21 @@
+[Unit]
+Description=DeGiro rule-based trading bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Adjust to wherever you cloned the repo and created the venv.
+WorkingDirectory=/opt/degiro-bot
+ExecStart=/opt/degiro-bot/.venv/bin/python main.py
+Restart=on-failure
+RestartSec=30
+
+# Run as a dedicated non-root user rather than the service default.
+User=degirobot
+Group=degirobot
+
+# .env and config.yaml live in WorkingDirectory and are loaded by the app itself.
+
+[Install]
+WantedBy=multi-user.target
