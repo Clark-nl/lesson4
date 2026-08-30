@@ -7,7 +7,17 @@
 - **DeGiro는 공식 공개 API를 제공하지 않습니다.** 이 봇은 비공식 라이브러리인 [`degiro-connector`](https://pypi.org/project/degiro-connector/)를 사용합니다. 리버스 엔지니어링된 API라 DeGiro 쪽에서 예고 없이 동작을 바꾸거나 계정을 제한할 수 있습니다. DeGiro 이용약관을 직접 확인하고 본인 책임 하에 사용하세요.
 - **실제 자금이 움직입니다.** `I_UNDERSTAND_THE_RISK=true`로 설정하기 전까지는 주문을 실제로 넣지 않고 로그만 남깁니다(드라이런). 실거래를 켜기 전에 반드시 로그를 확인하세요.
 - 이 코드는 투자 자문이 아니며, 전략의 수익성을 보장하지 않습니다. 소액/과거 데이터로 충분히 검증 후 사용하세요.
-- `degiro_client.py`는 `degiro-connector` 라이브러리의 일반적인 사용 패턴을 기반으로 작성되었습니다. 설치된 라이브러리 버전에 따라 클래스/메서드 이름이 다를 수 있으니, 실거래 전에 `pip install -r requirements.txt` 후 `python -c "import degiro_connector"`로 실제 API를 확인하고 필요시 `src/degiro_client.py`를 라이브러리 버전에 맞게 조정하세요.
+- `degiro_client.py`는 실제 설치된 `degiro-connector==3.0.36` 소스 코드를 직접 읽고 그에 맞춰 작성되었습니다 (`connect`/`get_client_details`/`get_update`/`check_order`/`confirm_order` 액션과 `Order` 모델의 실제 필드명·enum 값 기준). 다만 계좌 잔고/포지션 데이터(`get_update`의 `portfolio`/`cashFunds`/`totalPortfolio`)는 라이브러리가 타입을 강제하지 않는 **원시 JSON**이라, DeGiro가 알려진 "`{name, value}` 쌍의 리스트" 포맷을 그대로 쓴다는 전제 하에 파싱했습니다 — 실제 계좌로 테스트하지 못했으니 실거래 전에 반드시 아래 "실제 계좌 연결 확인"을 먼저 실행하세요.
+
+## 실제 계좌 연결 확인 (실거래 전 필수)
+
+`.env`/`config.yaml`을 채운 뒤, **주문은 전혀 넣지 않는** 읽기 전용 점검 스크립트를 먼저 실행하세요:
+
+```bash
+python -m scripts.inspect_account
+```
+
+로그인, 포트폴리오 총액/현금, 각 종목 포지션·시세 이력을 출력합니다. `WARNING`이 뜨면(`portfolio value came back as 0`, `no price history returned` 등) `src/degiro_client.py`의 파싱 로직(`_flatten_value_list`, `_iter_positions`, `get_price_history`)이 실제 계좌 응답 형식과 안 맞는다는 뜻이니, 필요하면 `raw=True`로 원본 JSON을 찍어보고 맞춰 수정하세요.
 
 ## 전략
 
@@ -110,5 +120,6 @@ degiro-bot/
 │   ├── risk.py               # 포지션 사이징, 손절, 일일 손실 서킷 브레이커
 │   ├── degiro_client.py     # degiro-connector 래퍼 (인증/시세/주문)
 │   └── bot.py                 # 메인 루프
+├── scripts/inspect_account.py # 실거래 전 읽기 전용 계좌 연결 확인
 └── tests/                     # indicators/strategy/risk 단위 테스트
 ```
