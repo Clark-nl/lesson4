@@ -52,12 +52,16 @@ python -m pipeline.run --config config.example.yaml
 
 ```
 output/
+  storyboard.txt            나레이션 + 이미지 프롬프트 텍스트 파일
   scenes/                 장면별 중간 산출물
   master_9x16.mp4          마스터 영상
   export_9x16.mp4          Reels / Shorts / TikTok
   export_1x1.mp4           정사각 피드
   export_16x9.mp4          YouTube / 가로 피드
 ```
+
+`storyboard.txt`는 스토리보드 생성 직후(1단계)에 매번 자동으로 저장됩니다 — 영상이 완성되기 전에
+나레이션/이미지 프롬프트만 먼저 검토하거나 다른 곳에 공유하고 싶을 때 사용하세요.
 
 ## 나레이션 언어 (한국어 / 영어)
 

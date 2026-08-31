@@ -10,6 +10,7 @@ from .providers.image import get_image_provider
 from .providers.script import get_script_provider
 from .providers.tts import get_tts_provider
 from .providers.video import get_video_provider
+from .storyboard_export import write_storyboard_txt
 
 MASTER_SIZE = (1080, 1920)  # 9:16 마스터 해상도
 
@@ -27,6 +28,8 @@ def run(config_path: str) -> Path:
 
     print(f"[1/5] 스토리보드 생성 중 ({cfg.script_provider}, language={cfg.language})...")
     scenes = script_provider.generate(cfg.topic, cfg.num_scenes, cfg.language)
+    storyboard_path = write_storyboard_txt(cfg.topic, scenes, out_dir / "storyboard.txt")
+    print(f"  -> {storyboard_path}")
 
     scene_clip_paths = []
     for scene in scenes:
