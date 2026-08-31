@@ -11,8 +11,10 @@ video_provider: local_kenburns  # local_kenburns(무료/로컬) | http_generic(R
 tts_provider: mock           # mock | openai
 
 providers:
+  # script_provider: anthropic 는 공식 anthropic SDK를 사용한다.
+  # 자격증명은 ANTHROPIC_API_KEY 환경변수 또는 `ant auth login` 프로필에서 자동으로 읽는다.
   anthropic:
-    model: "claude-sonnet-5"
+    model: "claude-opus-5"
 
   openai_image:
     model: "dall-e-3"

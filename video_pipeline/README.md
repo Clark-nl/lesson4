@@ -65,10 +65,39 @@ output/
 
 | 단계 | provider 값 | 설명 |
 |---|---|---|
-| script_provider | `mock` \| `anthropic` | `anthropic`은 `ANTHROPIC_API_KEY` 필요 |
+| script_provider | `mock` \| `anthropic` | `anthropic`은 [Claude API](#script_provider-anthropic-연동) 사용 |
 | image_provider | `mock` \| `openai` | `openai`(DALL·E)는 `OPENAI_API_KEY` 필요 |
 | video_provider | `local_kenburns` \| `http_generic` | 아래 설명 참고 |
 | tts_provider | `mock` \| `openai` | `openai` TTS는 `OPENAI_API_KEY` 필요 |
+
+### script_provider: anthropic 연동
+
+`AnthropicScriptProvider`(`pipeline/providers/script.py`)는 공식 [`anthropic`](https://pypi.org/project/anthropic/)
+Python SDK로 Claude를 호출해 주제 하나를 장면별 나레이션 + 이미지 프롬프트로 구조화합니다.
+`client.messages.parse()` + Pydantic 스키마(`_Storyboard`)로 응답을 강제 구조화하므로,
+JSON 파싱 실패나 텍스트 앞뒤에 붙는 설명 때문에 깨지는 문제가 없습니다.
+
+```yaml
+script_provider: anthropic
+providers:
+  anthropic:
+    model: "claude-opus-5"   # 생략 시 기본값
+```
+
+**자격증명**: 코드에 키를 하드코딩하지 않습니다. SDK가 아래 순서로 자동 해석합니다.
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+# 또는
+ant auth login   # ~/.config/anthropic/ 에 프로필 저장, SDK가 자동으로 사용
+```
+
+```bash
+python -m pipeline.run --config config.yaml   # script_provider: anthropic 로 설정된 config
+```
+
+인증 실패나 API 오류는 `pipeline/providers/script.py`에서 `anthropic.AuthenticationError` /
+`anthropic.APIStatusError`를 잡아 한국어 메시지로 바꿔 올립니다.
 
 ### video_provider: 힉스필드가 아니어도 되는 이유
 

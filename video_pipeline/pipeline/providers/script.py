@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import json
-import os
-import re
-
-import requests
+import anthropic
+from pydantic import BaseModel
 
 from ..models import Scene
 from .base import ScriptProvider
@@ -29,44 +26,52 @@ class MockScriptProvider(ScriptProvider):
         return scenes
 
 
-class AnthropicScriptProvider(ScriptProvider):
-    """Claude API로 실제 스토리보드(나레이션 + 이미지 프롬프트)를 생성."""
+class _StoryboardScene(BaseModel):
+    narration: str
+    image_prompt: str
 
-    def __init__(self, model: str = "claude-sonnet-5"):
+
+class _Storyboard(BaseModel):
+    scenes: list[_StoryboardScene]
+
+
+class AnthropicScriptProvider(ScriptProvider):
+    """Claude API(공식 anthropic SDK)로 실제 스토리보드(나레이션 + 이미지 프롬프트)를 생성.
+
+    자격증명은 SDK가 자동으로 해석한다(ANTHROPIC_API_KEY -> ANTHROPIC_AUTH_TOKEN ->
+    `ant auth login` 프로필 순). 키를 직접 하드코딩하지 않는다.
+    """
+
+    def __init__(self, model: str = "claude-opus-5"):
         self.model = model
-        self.api_key = os.environ.get("ANTHROPIC_API_KEY")
-        if not self.api_key:
-            raise RuntimeError("ANTHROPIC_API_KEY 환경변수가 필요합니다.")
+        self.client = anthropic.Anthropic()
 
     def generate(self, topic: str, num_scenes: int) -> list[Scene]:
         prompt = (
             f"'{topic}' 주제로 세로형(9:16) SNS 숏폼 영상 스토리보드를 "
             f"정확히 {num_scenes}개 장면으로 만들어줘. "
             "각 장면은 narration(자연스러운 한국어 나레이션 1~2문장)과 "
-            "image_prompt(영어, 장면을 그릴 이미지 생성 프롬프트)를 갖는 JSON 배열로만 응답해. "
-            '형식: [{"narration": "...", "image_prompt": "..."}, ...]'
+            "image_prompt(영어, 장면을 그릴 이미지 생성 프롬프트)를 가져야 해."
         )
-        resp = requests.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": self.api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            json={
-                "model": self.model,
-                "max_tokens": 2000,
-                "messages": [{"role": "user", "content": prompt}],
-            },
-            timeout=60,
-        )
-        resp.raise_for_status()
-        text = resp.json()["content"][0]["text"]
-        match = re.search(r"\[.*\]", text, re.S)
-        items = json.loads(match.group(0) if match else text)
+        try:
+            response = self.client.messages.parse(
+                model=self.model,
+                max_tokens=4096,
+                messages=[{"role": "user", "content": prompt}],
+                output_format=_Storyboard,
+            )
+        except anthropic.AuthenticationError as e:
+            raise RuntimeError(
+                "Anthropic 인증에 실패했습니다. ANTHROPIC_API_KEY를 설정하거나 "
+                "`ant auth login`으로 로그인하세요."
+            ) from e
+        except anthropic.APIStatusError as e:
+            raise RuntimeError(f"Anthropic API 오류 ({e.status_code}): {e.message}") from e
+
+        scenes = response.parsed_output.scenes[:num_scenes]
         return [
-            Scene(index=i, narration=item["narration"], image_prompt=item["image_prompt"])
-            for i, item in enumerate(items[:num_scenes])
+            Scene(index=i, narration=s.narration, image_prompt=s.image_prompt)
+            for i, s in enumerate(scenes)
         ]
 
 
