@@ -59,6 +59,27 @@ output/
   export_16x9.mp4          YouTube / 가로 피드
 ```
 
+## 나레이션 언어 (한국어 / 영어)
+
+`language` 설정으로 나레이션 언어를 고릅니다(`mock`, `anthropic` script_provider 둘 다 지원).
+
+```yaml
+language: "en"   # "en" | "ko" — 기본값 en
+```
+
+- 한국어로 만들고 싶으면 `config.example.yaml`(`language: "ko"`)을 복사해서 사용
+- 영어로 만들고 싶으면 `config.example.en.yaml`(`language: "en"`)을 복사해서 사용
+
+```bash
+cp config.example.en.yaml config.yaml
+# config.yaml의 topic 수정
+python -m pipeline.run --config config.yaml
+```
+
+이미지 프롬프트(`image_prompt`)는 언어와 무관하게 항상 영어로 생성됩니다 — 대부분의 이미지/영상
+생성 API가 영어 프롬프트에서 품질이 더 좋기 때문입니다. `image_prompt`는 화면에 노출되지
+않고 생성 API 호출에만 쓰이므로, 나레이션 언어와 분리해도 문제 없습니다.
+
 ## 실제 서비스로 교체하기
 
 `config.yaml`에서 4개의 provider를 독립적으로 선택합니다.
@@ -146,7 +167,8 @@ providers:
 
 ```
 video_pipeline/
-  config.example.yaml
+  config.example.yaml     한국어 예제 (language: ko)
+  config.example.en.yaml  영어 예제 (language: en)
   requirements.txt
   assets/fonts/NanumGothic.ttf
   pipeline/

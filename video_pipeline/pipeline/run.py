@@ -25,8 +25,8 @@ def run(config_path: str) -> Path:
     video_provider = get_video_provider(cfg.video_provider, cfg.providers)
     tts_provider = get_tts_provider(cfg.tts_provider, cfg.providers)
 
-    print(f"[1/5] 스토리보드 생성 중 ({cfg.script_provider})...")
-    scenes = script_provider.generate(cfg.topic, cfg.num_scenes)
+    print(f"[1/5] 스토리보드 생성 중 ({cfg.script_provider}, language={cfg.language})...")
+    scenes = script_provider.generate(cfg.topic, cfg.num_scenes, cfg.language)
 
     scene_clip_paths = []
     for scene in scenes:

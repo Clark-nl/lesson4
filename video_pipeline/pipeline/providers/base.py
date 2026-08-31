@@ -10,7 +10,7 @@ class ScriptProvider(ABC):
     """주제 -> 장면별 나레이션 + 이미지 프롬프트 스토리보드."""
 
     @abstractmethod
-    def generate(self, topic: str, num_scenes: int) -> list[Scene]: ...
+    def generate(self, topic: str, num_scenes: int, language: str) -> list[Scene]: ...
 
 
 class ImageProvider(ABC):

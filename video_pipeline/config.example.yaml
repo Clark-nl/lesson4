@@ -1,6 +1,7 @@
-# 영상 자동 생성 파이프라인 설정 예제
+# 영상 자동 생성 파이프라인 설정 예제 (한글 버전 - 영어로 만들고 싶으면 config.example.en.yaml 참고)
 topic: "가을 캠핑 브이로그 하이라이트"
 num_scenes: 5
+language: "ko"   # 나레이션 언어. "en" | "ko" (mock/anthropic script_provider가 참고)
 aspect_ratios: ["9:16", "1:1", "16:9"]
 output_dir: "output"
 

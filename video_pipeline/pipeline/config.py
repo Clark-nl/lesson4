@@ -11,6 +11,7 @@ import yaml
 class Config:
     topic: str
     num_scenes: int = 5
+    language: str = "en"
     aspect_ratios: list[str] = field(default_factory=lambda: ["9:16"])
     output_dir: Path = Path("output")
     script_provider: str = "mock"
