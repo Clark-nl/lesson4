@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import anthropic
 from pydantic import BaseModel
 
@@ -29,6 +32,33 @@ class MockScriptProvider(ScriptProvider):
                     index=i,
                     narration=narration,
                     image_prompt=f"{topic}, {beat}, cinematic, vertical video still",
+                )
+            )
+        return scenes
+
+
+class FixedScriptProvider(ScriptProvider):
+    """직접 작성한 완성 대본을 그대로 사용하는 provider.
+
+    타임코드까지 짜여진 대본(예: 30초 Reels 대본)은 AI가 새로 "생성"하면 안 되고
+    그대로 써야 하므로, JSON 파일에 담긴 장면 목록을 읽어 그대로 반환한다.
+    각 장면은 duration(초)을 가질 수 있고, 있으면 TTS/영상 타이밍이 이를 따른다.
+    topic/num_scenes/language는 무시된다 - 대본 파일이 곧 콘텐츠다.
+    """
+
+    def __init__(self, storyboard_file: str):
+        self.storyboard_file = Path(storyboard_file)
+
+    def generate(self, topic: str, num_scenes: int, language: str) -> list[Scene]:
+        data = json.loads(self.storyboard_file.read_text(encoding="utf-8"))
+        scenes = []
+        for i, item in enumerate(data["scenes"]):
+            scenes.append(
+                Scene(
+                    index=i,
+                    narration=item["narration"],
+                    image_prompt=item["image_prompt"],
+                    duration=item.get("duration"),
                 )
             )
         return scenes
@@ -89,4 +119,6 @@ def get_script_provider(name: str, opts: dict) -> ScriptProvider:
         return MockScriptProvider()
     if name == "anthropic":
         return AnthropicScriptProvider(**opts.get("anthropic", {}))
+    if name == "fixed":
+        return FixedScriptProvider(**opts.get("fixed", {}))
     raise ValueError(f"알 수 없는 script_provider: {name}")

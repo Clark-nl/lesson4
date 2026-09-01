@@ -1,0 +1,39 @@
+{
+  "scenes": [
+    {
+      "narration": "AI로 부업해보겠다고 이것저것 결제했는데요. 지금까지 번 돈은 0원입니다.",
+      "image_prompt": "Vertical 9:16 cinematic shot of a young adult sitting alone at a desk late at night, laptop screen glowing with multiple 'Payment Successful' receipt confirmations stacked on screen, tired and slightly disappointed expression, cold blue monitor light, moody realistic photography",
+      "duration": 3
+    },
+    {
+      "narration": "Claude도 써보고, 영상 AI도 써보고, 자동화 툴도 찾아보고… 계속 뭔가를 배우고 결제했습니다.",
+      "image_prompt": "Vertical 9:16 cinematic shot, laptop browser with several open tabs showing an AI chat interface, a video-generation AI tool, and an automation workflow builder, hands typing fast on keyboard, notebooks and sticky notes scattered on desk, blue-toned tech lighting, busy productive but chaotic mood",
+      "duration": 5
+    },
+    {
+      "narration": "그런데 어느 순간 이런 생각이 들더라고요. \"나 지금 AI로 생산하는 게 아니라 그냥 소비만 하고 있는 거 아닌가?\"",
+      "image_prompt": "Vertical 9:16 cinematic close-up portrait, person leaning back in an office chair rubbing their face in a moment of realization, laptop screen dimmed and blurred in the background, single soft spotlight on the face, pensive uneasy expression, dark quiet room",
+      "duration": 6
+    },
+    {
+      "narration": "사실 제가 무서운 건 몇백 유로 날리는 게 아닙니다. 회사 월급이 없으면 아무것도 못 하는 사람이 되는 것.",
+      "image_prompt": "Vertical 9:16 cinematic shot, closed laptop and an empty coffee mug on a minimalist desk, cold blue ambient lighting, faint worried reflection visible in the dark laptop screen, symbolizing fear of losing a steady paycheck, tense minimalist mood",
+      "duration": 7
+    },
+    {
+      "narration": "저는 AI로 대박을 내고 싶은 게 아니라 회사 밖에서도 돈을 만들 수 있는 사람인지 확인해보고 싶습니다.",
+      "image_prompt": "Vertical 9:16 cinematic shot, person standing by a home office window at dusk looking outside with a determined expression, laptop glowing warmly on the desk behind them, warm rim light contrasted against cool blue interior, hopeful serious mood",
+      "duration": 6
+    },
+    {
+      "narration": "그래서 목표를 바꿨습니다. 첫 목표는 월 1,000유로가 아니라, AI로 첫 1유로 벌기.",
+      "image_prompt": "Vertical 9:16 cinematic close-up, hand writing a new goal on a notebook page, the euro symbol and number one underlined twice in pen, laptop blurred softly in background, warm desk lamp light, focused motivated mood",
+      "duration": 3
+    },
+    {
+      "narration": "AI 수익, 0유로에서 시작합니다. 직접 해보고 기록해보겠습니다.",
+      "image_prompt": "Vertical 9:16 minimalist end-card graphic, bold large text reading euro zero arrow question mark centered on a dark gradient background, subtle glowing particle effects, clean modern tech aesthetic, cinematic vertical still",
+      "duration": 4
+    }
+  ]
+}

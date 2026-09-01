@@ -84,13 +84,43 @@ python -m pipeline.run --config config.yaml
 생성 API가 영어 프롬프트에서 품질이 더 좋기 때문입니다. `image_prompt`는 화면에 노출되지
 않고 생성 API 호출에만 쓰이므로, 나레이션 언어와 분리해도 문제 없습니다.
 
+## 직접 쓴 대본 그대로 사용하기 (script_provider: fixed)
+
+타임코드까지 짜여진 완성 대본(예: 30초 Reels 대본)은 AI가 새로 생성하면 안 되고 그대로
+써야 합니다. `script_provider: fixed`는 JSON 파일에 담긴 장면 목록을 그대로 읽어 씁니다.
+각 장면에 `duration`(초)을 지정하면 mock TTS가 그 길이에 맞춰 자막/타이밍을 정확히 맞춥니다
+(실제 TTS를 쓰면 실제 음성 길이가 우선합니다).
+
+`examples/storyboard_ai_side_hustle.json` 예제 형식:
+
+```json
+{
+  "scenes": [
+    {
+      "narration": "AI로 부업해보겠다고 이것저것 결제했는데요. 지금까지 번 돈은 0원입니다.",
+      "image_prompt": "Vertical 9:16 cinematic shot of a young adult sitting alone at a desk...",
+      "duration": 3
+    }
+  ]
+}
+```
+
+```yaml
+script_provider: fixed
+providers:
+  fixed:
+    storyboard_file: "examples/storyboard_ai_side_hustle.json"
+```
+
+`topic`/`num_scenes`/`language`는 이 provider에선 무시됩니다 — 대본 파일이 곧 콘텐츠입니다.
+
 ## 실제 서비스로 교체하기
 
 `config.yaml`에서 4개의 provider를 독립적으로 선택합니다.
 
 | 단계 | provider 값 | 설명 |
 |---|---|---|
-| script_provider | `mock` \| `anthropic` | `anthropic`은 [Claude API](#script_provider-anthropic-연동) 사용 |
+| script_provider | `mock` \| `anthropic` \| `fixed` | `anthropic`은 [Claude API](#script_provider-anthropic-연동) 사용, `fixed`는 [직접 쓴 대본](#직접-쓴-대본-그대로-사용하기-script_provider-fixed) 사용 |
 | image_provider | `mock` \| `openai` | `openai`(DALL·E)는 `OPENAI_API_KEY` 필요 |
 | video_provider | `local_kenburns` \| `http_generic` | 아래 설명 참고 |
 | tts_provider | `mock` \| `openai` | `openai` TTS는 `OPENAI_API_KEY` 필요 |
