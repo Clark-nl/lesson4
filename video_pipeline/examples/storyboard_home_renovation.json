@@ -1,0 +1,39 @@
+{
+  "scenes": [
+    {
+      "narration": "집을 고치다 보면, 제일 후회되는 건 돈이 아니더라고요.",
+      "image_prompt": "Vertical 9:16 cinematic close-up of hands holding paint color swatches and tile samples in a half-renovated room, dust sheets and bare walls in the background, warm afternoon light through a window, contemplative documentary photography, shallow depth of field",
+      "duration": 3
+    },
+    {
+      "narration": "처음 이 집을 샀을 때는 꽤 마음에 들었습니다.",
+      "image_prompt": "Vertical 9:16 cinematic shot of an empty living room on moving day, cardboard boxes stacked by the wall, bright sunlight streaming through large windows onto a bare wooden floor, hopeful warm golden tone, lifestyle photography",
+      "duration": 3
+    },
+    {
+      "narration": "그런데 살면서 하나씩 고치기 시작했어요. 주방을 바꾸고, 욕실을 바꾸고, 공간을 고치고…",
+      "image_prompt": "Vertical 9:16 cinematic shot of a kitchen renovation in progress, half-installed cabinets, power tools and tile stacks on the floor, plastic dust sheeting, natural daylight with fine dust in the air, realistic documentary style",
+      "duration": 5
+    },
+    {
+      "narration": "이상한 건, 하나가 좋아지면 전에는 안 보이던 다른 게 또 보인다는 겁니다.",
+      "image_prompt": "Vertical 9:16 cinematic shot contrasting a pristine newly renovated bathroom on one side with an old worn wall and dated door frame right beside it, sharp visual contrast between new and old, cool even lighting, quiet unsettling mood",
+      "duration": 5
+    },
+    {
+      "narration": "그러다 가끔 이런 생각을 합니다. \"차라리 그때 다른 집을 샀으면 어땠을까?\"",
+      "image_prompt": "Vertical 9:16 cinematic shot of a person sitting alone on the floor of a half-renovated room at night, scrolling real estate listings on a phone, cold blue phone glow on their face, dark quiet room, melancholic mood",
+      "duration": 5
+    },
+    {
+      "narration": "그리고 더 아쉬운 건 돈보다, 왜 그때의 나는 이런 걸 볼 줄 몰랐을까 하는 것.",
+      "image_prompt": "Vertical 9:16 cinematic close-up of a person's thoughtful face reflected in a dark window at dusk, city or street lights blurred beyond the glass, soft rim light, expression of quiet regret, moody portrait photography",
+      "duration": 4
+    },
+    {
+      "narration": "생각해보면 저는 지금 집을 고치는 게 아니라, 과거의 제 선택을 계속 수정하고 있는지도 모르겠습니다.",
+      "image_prompt": "Vertical 9:16 cinematic wide shot of a person standing still in the middle of a finished renovated living room, quietly looking around, warm evening light and long shadows across the floor, calm reflective atmosphere, cinematic film still",
+      "duration": 5
+    }
+  ]
+}
