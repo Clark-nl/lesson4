@@ -1,0 +1,80 @@
+name: Site Launch Pipeline
+
+# Repeats the 6-step process every new site goes through:
+#   1. 사이트 개발 (site development)
+#   2. 도메인 구매 (domain purchase)
+#   3. 배포 환경에 도메인 연결 (connect domain to hosting)
+#   4. 구글 서치콘솔 / 네이버 서치어드바이저 등록
+#   5. 다음 검색 / Bing 웹마스터 도구 등록
+#   6. 애드센스 승인 신청 (AdSense approval application)
+#
+# Steps 1-3 happen outside this workflow (build/deploy + registrar/DNS).
+# Step 4-5 are automated here via search-engine ping/IndexNow.
+# Step 6 has no public API, so this workflow files a tracking issue with a
+# checklist instead, covering every step so nothing gets skipped.
+
+on:
+  workflow_dispatch:
+    inputs:
+      site_name:
+        description: "Site name (for the tracking issue title)"
+        required: true
+      domain:
+        description: "Live domain, e.g. example.com"
+        required: true
+      sitemap_url:
+        description: "Full sitemap URL"
+        required: false
+        default: ""
+
+jobs:
+  notify-search-engines:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve sitemap URL
+        id: sitemap
+        run: |
+          SITEMAP_URL="${{ inputs.sitemap_url }}"
+          if [ -z "$SITEMAP_URL" ]; then
+            SITEMAP_URL="https://${{ inputs.domain }}/sitemap.xml"
+          fi
+          echo "url=$SITEMAP_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Ping Google + IndexNow (Bing/Naver/Yandex/Seznam)
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+        run: ./scripts/ping-search-engines.sh "${{ steps.sitemap.outputs.url }}"
+
+  open-checklist-issue:
+    runs-on: ubuntu-latest
+    needs: notify-search-engines
+    permissions:
+      issues: write
+    steps:
+      - name: Create tracking issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const site = context.payload.inputs.site_name;
+            const domain = context.payload.inputs.domain;
+            const body = [
+              `Launch checklist for **${site}** (${domain}).`,
+              "",
+              "- [x] 1. 사이트 개발",
+              "- [ ] 2. 도메인 구매",
+              "- [ ] 3. 배포 환경에 도메인 연결",
+              "- [x] 4. 구글 서치콘솔 · 네이버 서치어드바이저 (sitemap ping sent by pipeline)",
+              "- [x] 5. 다음 검색 · Bing 웹마스터 도구 (IndexNow submission sent by pipeline)",
+              "- [ ] 6. 애드센스 승인 신청",
+              "",
+              "_Steps 2, 3 and 6 have no public API and must be completed manually; check them off here once done._",
+            ].join("\n");
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Site launch: ${site}`,
+              body,
+            });
