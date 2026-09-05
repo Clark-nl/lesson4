@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>Focus & Tabs 설정</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Focus &amp; Tabs 설정</h1>
+
+      <section class="card" id="premiumSection">
+        <h2>프리미엄</h2>
+        <div id="premiumInactive">
+          <p>
+            프리미엄을 활성화하면 <strong>커스텀 타이머 길이</strong>,
+            <strong>도메인별 탭 자동 그룹핑</strong>, <strong>유휴 탭 자동 정리</strong>를
+            사용할 수 있어요.
+          </p>
+          <p>
+            <a id="buyLink" href="https://gumroad.com/l/REPLACE_WITH_YOUR_PRODUCT" target="_blank" rel="noopener"
+              >→ 프리미엄 구매하기 (Gumroad)</a
+            >
+          </p>
+          <div class="row">
+            <input id="licenseInput" type="text" placeholder="라이선스 키 입력" />
+            <button id="activateBtn">활성화</button>
+          </div>
+          <p id="licenseMessage" class="message"></p>
+        </div>
+        <div id="premiumActive" hidden>
+          <p class="badge-line"><span class="badge">PREMIUM</span> 활성화됨</p>
+          <button id="deactivateBtn" class="ghost">라이선스 비활성화</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>타이머 길이</h2>
+        <div class="row">
+          <label>집중(분) <input id="focusMinutes" type="number" min="1" max="180" /></label>
+          <label>휴식(분) <input id="breakMinutes" type="number" min="1" max="60" /></label>
+        </div>
+        <p id="timerLockNote" class="muted" hidden>커스텀 길이는 프리미엄 기능입니다.</p>
+      </section>
+
+      <section class="card">
+        <h2>유휴 탭 자동 정리</h2>
+        <div class="row">
+          <label class="switch-row">
+            <input id="autoCleanupEnabled" type="checkbox" />
+            자동 정리 사용
+          </label>
+          <label>유휴 기준(분) <input id="idleMinutes" type="number" min="10" max="1440" /></label>
+        </div>
+        <p id="cleanupLockNote" class="muted" hidden>자동 정리는 프리미엄 기능입니다.</p>
+      </section>
+
+      <button id="saveBtn" class="primary">저장</button>
+      <p id="saveMessage" class="message"></p>
+    </main>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Focus & Tabs",
+  "version": "1.0.0",
+  "description": "중복 탭을 정리하고 뽀모도로 타이머로 집중 세션을 관리하세요. 프리미엄으로 자동 정리 규칙, 도메인별 그룹핑, 집중 통계를 잠금 해제합니다.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "options_page": "options.html",
+  "permissions": ["tabs", "storage", "alarms", "notifications", "tabGroups"],
+  "host_permissions": ["https://api.gumroad.com/*"],
+  "minimum_chrome_version": "116"
+}

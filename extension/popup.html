@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>Focus & Tabs</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="brand">
+        <img src="icons/icon32.png" alt="" />
+        <span>Focus &amp; Tabs</span>
+      </div>
+      <span id="premiumBadge" class="badge" hidden>PREMIUM</span>
+    </header>
+
+    <section class="card">
+      <h2>포커스 타이머</h2>
+      <div class="timer">
+        <div id="timeDisplay" class="time-display">25:00</div>
+        <div id="modeLabel" class="mode-label">집중 세션</div>
+      </div>
+      <div class="button-row">
+        <button id="startBtn" class="primary">시작</button>
+        <button id="pauseBtn" hidden>일시정지</button>
+        <button id="resumeBtn" hidden>재개</button>
+        <button id="resetBtn" class="ghost">리셋</button>
+      </div>
+      <div class="button-row small">
+        <button id="startBreakBtn" class="link">휴식 바로 시작 (5분)</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>탭 정리</h2>
+      <p id="tabCountLabel" class="muted">탭 개수 확인 중...</p>
+      <div class="button-row">
+        <button id="closeDuplicatesBtn">중복 탭 닫기</button>
+        <button id="groupByDomainBtn" class="premium-gated">도메인별 그룹핑 🔒</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>오늘의 집중 통계</h2>
+      <div id="statsFree" class="teaser">
+        <p>오늘 집중 시간, 완료 세션 수를 프리미엄에서 확인하세요.</p>
+        <button id="upgradeFromStats" class="link">프리미엄 알아보기 →</button>
+      </div>
+      <div id="statsPremium" class="stats-grid" hidden>
+        <div>
+          <div class="stat-value" id="statFocusTime">0분</div>
+          <div class="stat-label">오늘 집중 시간</div>
+        </div>
+        <div>
+          <div class="stat-value" id="statSessions">0</div>
+          <div class="stat-label">완료 세션</div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <a id="optionsLink" href="#">설정 / 업그레이드</a>
+    </footer>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
