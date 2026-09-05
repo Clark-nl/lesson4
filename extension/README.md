@@ -22,6 +22,8 @@
 
 코드 수정 후에는 `chrome://extensions`에서 새로고침(⟳) 버튼으로 반영합니다.
 
+실제 결제 없이 프리미엄 기능까지 테스트하는 방법과, Playwright로 검증한 테스트 항목은 [`TESTING.md`](TESTING.md)를 참고하세요.
+
 ## 프리미엄 라이선스 연동 (Gumroad)
 
 기본값은 [Gumroad License Verification API](https://api.gumroad.com/v2/licenses/verify)를 사용합니다.
