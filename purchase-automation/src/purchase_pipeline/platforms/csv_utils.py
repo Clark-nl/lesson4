@@ -10,8 +10,11 @@ from __future__ import annotations
 
 import csv
 import io
+import logging
 
 from purchase_pipeline.models import Product
+
+logger = logging.getLogger(__name__)
 
 # Default header names this pipeline looks for when you don't override
 # column_map. Edit column_map (not this) to match your actual file.
@@ -26,8 +29,21 @@ DEFAULT_CSV_COLUMN_MAP = {
 
 
 def parse_csv_products(text: str, column_map: dict[str, str], platform_name: str) -> list[Product]:
+    """Parse every row into a Product, skipping (and logging) rows that don't
+    parse instead of letting one bad row (a stray "N/A" price, a misaligned
+    column) take down the whole run.
+    """
+    products = []
     reader = csv.DictReader(io.StringIO(text))
-    return [_row_to_product(row, column_map, platform_name) for row in reader]
+    for line_number, row in enumerate(reader, start=2):  # header is line 1
+        try:
+            products.append(_row_to_product(row, column_map, platform_name))
+        except (ValueError, TypeError) as exc:
+            sku_hint = row.get(column_map.get("sku", ""), "?")
+            logger.warning(
+                "Skipping CSV row %d (sku=%s): %s", line_number, sku_hint, exc
+            )
+    return products
 
 
 def _row_to_product(row: dict, column_map: dict[str, str], platform_name: str) -> Product:

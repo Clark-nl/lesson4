@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    paths:
+      - "purchase-automation/**"
+      - ".github/workflows/ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: purchase-automation
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: PYTHONPATH=src python -m pytest -q
+
+      - name: Dry-run every profile (mock mode, no credentials)
+        run: |
+          for cfg in config.*.example.yaml; do
+            echo "=== $cfg ==="
+            PYTHONPATH=src python -m purchase_pipeline.pipeline --config "$cfg" --dry-run
+          done

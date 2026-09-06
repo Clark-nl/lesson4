@@ -23,8 +23,7 @@ import os
 import time
 from pathlib import Path
 
-import requests
-
+from purchase_pipeline.http import get_session
 from purchase_pipeline.models import Product
 
 logger = logging.getLogger(__name__)
@@ -77,6 +76,7 @@ class OwnerClanPlatform:
         self.page_size = page_size
         self._token: str | None = None
         self._token_expires_at: float = 0.0
+        self._session = get_session()
 
         if mock is None:
             mock = os.environ.get("OWNERCLAN_MOCK") == "1" or not (
@@ -98,7 +98,7 @@ class OwnerClanPlatform:
     def _access_token(self) -> str:
         if self._token and time.time() < self._token_expires_at - 30:
             return self._token
-        resp = requests.post(
+        resp = self._session.post(
             self.token_url,
             data={
                 "grant_type": "client_credentials",
@@ -117,7 +117,7 @@ class OwnerClanPlatform:
         products: list[Product] = []
         after: str | None = None
         while True:
-            resp = requests.post(
+            resp = self._session.post(
                 self.api_url,
                 headers={"Authorization": f"Bearer {self._access_token()}"},
                 json={

@@ -24,6 +24,15 @@ MARKETPLACE_CHANNELS = {"coupang", "naver", "ebay", "amazon_nl", "amazon_de"}
 
 
 def run(config_path: str, dry_run: bool = False) -> None:
+    try:
+        _run(config_path, dry_run)
+    except Exception as exc:
+        logger.exception("Pipeline run failed for config %s", config_path)
+        notify_slack(f"[구매 리스트 자동화] 실패: {config_path}\n{type(exc).__name__}: {exc}")
+        raise
+
+
+def _run(config_path: str, dry_run: bool) -> None:
     config = load_config(config_path)
     platform = get_platform(config.platform)
 

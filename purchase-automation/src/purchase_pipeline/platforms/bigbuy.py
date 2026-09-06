@@ -43,8 +43,7 @@ import logging
 import os
 from pathlib import Path
 
-import requests
-
+from purchase_pipeline.http import get_session
 from purchase_pipeline.models import Product
 
 logger = logging.getLogger(__name__)
@@ -68,6 +67,7 @@ class BigBuyPlatform:
     ):
         self.api_key = api_key or os.environ.get("BIGBUY_API_KEY")
         self.api_url = api_url
+        self._session = get_session()
 
         if mock is None:
             mock = os.environ.get("BIGBUY_MOCK") == "1" or not self.api_key
@@ -88,7 +88,7 @@ class BigBuyPlatform:
         return {"Authorization": f"Bearer {self.api_key}", "Accept": "application/json"}
 
     def _fetch_catalog_live(self) -> list[Product]:
-        products_resp = requests.get(
+        products_resp = self._session.get(
             f"{self.api_url}/rest/catalog/products.json",
             headers=self._headers(),
             params={"isoCode": "en"},
@@ -97,7 +97,7 @@ class BigBuyPlatform:
         products_resp.raise_for_status()
         products_by_id = {item["id"]: item for item in products_resp.json()}
 
-        stock_resp = requests.get(
+        stock_resp = self._session.get(
             f"{self.api_url}/rest/catalog/productsstock.json",
             headers=self._headers(),
             params={"isoCode": "en"},

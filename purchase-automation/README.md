@@ -80,10 +80,11 @@ purchase-automation/
   requirements.txt
   src/purchase_pipeline/
     models.py                  # Product / ChannelFee / PurchaseListItem
-    config.py                  # YAML 설정 로더
+    config.py                  # YAML 설정 로더 + 검증
+    http.py                    # 재시도 지원 공용 requests.Session, 페이지네이션 헬퍼
     scoring.py                 # 마진율(+수요점수) 기반 필터링/랭킹
-    pipeline.py                # CLI 진입점 (fetch -> score -> export -> notify)
-    notify.py                  # Slack 알림 (선택)
+    pipeline.py                # CLI 진입점 (fetch -> score -> export -> notify), 실패 시 Slack 알림
+    notify.py                  # Slack 알림 (선택, 실패해도 파이프라인은 안 죽음)
     platforms/
       base.py                  # 새 플랫폼 추가 시 구현할 인터페이스
       ownerclan.py              # 오너클랜 커넥터 (mock 모드 지원)
@@ -104,6 +105,11 @@ purchase-automation/
     test_dropxl_platform.py
     test_syncee_platform.py
     test_csv_import_platform.py
+    test_csv_utils.py               # 잘못된 CSV 행 스킵 로직
+    test_http.py                    # 재시도 세션/페이지네이션 헬퍼
+    test_shopify_exporter.py        # 중복 SKU 스킵 로직
+    test_config_validation.py       # 설정값 검증
+    test_pipeline_error_handling.py # 실패 시 Slack 알림 + 예외 재전파
 ```
 
 ## 로컬 실행
@@ -169,6 +175,17 @@ PYTHONPATH=src python -m pytest -q
 > 공통 원칙: 스키마가 다르면 해당 플랫폼 모듈의 쿼리/파싱 함수만 맞춰 수정하면 나머지 파이프라인(스코어링/익스포트/알림)은 그대로 재사용됩니다.
 
 오픈마켓 API(쿠팡 Wing, 네이버 커머스, Amazon SP-API)는 셀러별 카테고리 매핑과 사전 승인이 필요해 우선 벌크업로드 CSV 형태로 산출하도록 했습니다. API 승인을 받으면 `marketplace_exporter.py`가 만드는 컬럼을 그대로 API 페이로드에 매핑하면 됩니다.
+
+## 안정성 보강 (파이프라인 강화)
+
+매일 자동 실행되는 파이프라인이라 한 번의 일시적 오류로 조용히 실패하거나, 재실행 시 중복 데이터가 쌓이지 않도록 다음을 보강했습니다.
+
+- **네트워크 재시도**: 모든 API/피드 호출이 `http.py`의 공용 `requests.Session`을 사용 — 429/500/502/503/504 응답이나 순간적 연결 오류는 지수 백오프로 최대 3회 자동 재시도합니다.
+- **실패 시 Slack 알림**: `pipeline.run()`이 어느 단계에서 예외가 나든 잡아서 Slack으로 실패 내용을 보낸 뒤 그대로 다시 예외를 던집니다 — 그래야 GitHub Actions에서도 실패로 표시되면서, 동시에 사람도 바로 알림을 받습니다.
+- **Shopify 중복 등록 방지**: `shopify_exporter.py`가 draft 상품을 만들기 전에 스토어에 이미 있는 SKU 전체를 먼저 조회해서, 어제 이미 추천/등록한 상품을 오늘 또 중복 생성하지 않습니다.
+- **CSV 파싱 견고성**: `csv_utils.parse_csv_products`는 한 행이 깨져 있어도(가격 칸에 "N/A" 같은 값 등) 그 행만 건너뛰고 경고 로그를 남긴 뒤 나머지 행은 정상 처리합니다 — 파일 하나의 오타로 전체 실행이 죽지 않습니다.
+- **설정값 검증**: `config.py`가 로드 시점에 `channels`가 비어있진 않은지, `min_margin_rate`가 0~1 사이인지, 채널 수수료 합이 100%를 넘지 않는지 등을 검사해 명확한 에러 메시지로 알려줍니다. 채널은 있는데 `channel_fees`에 항목이 없으면 "수수료 0%로 계산되어 마진이 과대평가될 수 있다"는 경고를 남깁니다.
+- **CI**: `.github/workflows/ci.yml`이 `main`에 대한 모든 push/PR마다 전체 테스트와 5개 프로필 전부의 dry-run을 실행해, 코드가 배포(스케줄 실행)되기 전에 회귀를 잡아냅니다. 기존 `purchase_pipeline.yml`은 실제 스케줄 실행 전용으로 그대로 둡니다.
 
 ## 새 플랫폼(도매매 등) 추가하기
 

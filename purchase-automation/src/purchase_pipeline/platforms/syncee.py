@@ -38,8 +38,7 @@ import logging
 import os
 from pathlib import Path
 
-import requests
-
+from purchase_pipeline.http import get_session, next_page_url
 from purchase_pipeline.models import Product
 
 logger = logging.getLogger(__name__)
@@ -62,6 +61,7 @@ class SynceePlatform:
     ):
         self.shop = shop or os.environ.get("SHOPIFY_SHOP")
         self.access_token = access_token or os.environ.get("SHOPIFY_ACCESS_TOKEN")
+        self._session = get_session()
 
         if mock is None:
             mock = os.environ.get("SYNCEE_MOCK") == "1" or not (self.shop and self.access_token)
@@ -83,10 +83,10 @@ class SynceePlatform:
         url = f"https://{self.shop}/admin/api/{API_VERSION}/products.json"
         params = {"limit": 250}
         while url:
-            resp = requests.get(url, headers=self._headers(), params=params, timeout=30)
+            resp = self._session.get(url, headers=self._headers(), params=params, timeout=30)
             resp.raise_for_status()
             products.extend(resp.json().get("products", []))
-            url, params = _next_page(resp)
+            url, params = next_page_url(resp), None
 
         inventory_item_ids = [
             str(variant["inventory_item_id"])
@@ -103,7 +103,7 @@ class SynceePlatform:
         # Shopify limits inventory_items.json to 250 ids per request.
         for i in range(0, len(ids), 250):
             chunk = ids[i : i + 250]
-            resp = requests.get(
+            resp = self._session.get(
                 f"https://{self.shop}/admin/api/{API_VERSION}/inventory_items.json",
                 headers=self._headers(),
                 params={"ids": ",".join(chunk)},
@@ -144,11 +144,3 @@ class SynceePlatform:
                     )
                 )
         return result
-
-
-def _next_page(resp: requests.Response) -> tuple[str | None, dict | None]:
-    link = resp.headers.get("Link", "")
-    for part in link.split(","):
-        if 'rel="next"' in part:
-            return part.split(";")[0].strip(" <>"), None
-    return None, None

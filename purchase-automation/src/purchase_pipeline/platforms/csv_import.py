@@ -26,8 +26,7 @@ import logging
 import os
 from pathlib import Path
 
-import requests
-
+from purchase_pipeline.http import get_session
 from purchase_pipeline.models import Product
 from purchase_pipeline.platforms.csv_utils import DEFAULT_CSV_COLUMN_MAP, parse_csv_products
 
@@ -49,6 +48,7 @@ class CSVImportPlatform:
     ):
         self.source = source or os.environ.get("CSV_IMPORT_SOURCE")
         self.column_map = column_map or dict(DEFAULT_CSV_COLUMN_MAP)
+        self._session = get_session()
 
         if mock is None:
             mock = os.environ.get("CSV_IMPORT_MOCK") == "1" or not self.source
@@ -62,7 +62,7 @@ class CSVImportPlatform:
 
     def _read_source(self) -> str:
         if self.source.startswith(("http://", "https://")):
-            resp = requests.get(self.source, timeout=60)
+            resp = self._session.get(self.source, timeout=60)
             resp.raise_for_status()
             return resp.text
         return Path(self.source).read_text(encoding="utf-8")

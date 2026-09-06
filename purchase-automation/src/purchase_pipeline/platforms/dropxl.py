@@ -37,8 +37,7 @@ import logging
 import os
 from pathlib import Path
 
-import requests
-
+from purchase_pipeline.http import get_session
 from purchase_pipeline.models import Product
 from purchase_pipeline.platforms.csv_utils import DEFAULT_CSV_COLUMN_MAP, parse_csv_products
 
@@ -62,6 +61,7 @@ class DropXLPlatform:
         self.feed_url = feed_url or os.environ.get("DROPXL_FEED_URL")
         self.api_key = api_key or os.environ.get("DROPXL_API_KEY")
         self.column_map = column_map or dict(DEFAULT_CSV_COLUMN_MAP)
+        self._session = get_session()
 
         if mock is None:
             mock = os.environ.get("DROPXL_MOCK") == "1" or not self.feed_url
@@ -78,6 +78,6 @@ class DropXLPlatform:
 
     def _fetch_feed_text(self) -> str:
         headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
-        resp = requests.get(self.feed_url, headers=headers, timeout=60)
+        resp = self._session.get(self.feed_url, headers=headers, timeout=60)
         resp.raise_for_status()
         return resp.text
