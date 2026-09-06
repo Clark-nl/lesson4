@@ -1,30 +1,34 @@
 """BigBuy sourcing-platform connector.
 
-BigBuy (bigbuy.eu) is a real, Spain-based EU wholesale/dropshipping
-company: 30,000 m² own warehouse, 250,000+ SKUs across 20+ categories
-(electronics, home, sports, fashion accessories, ...), 2-3 day EU
-shipping including the Netherlands. Register API access from the BigBuy
-seller panel (contact form) to obtain BIGBUY_API_KEY.
+What's confirmed via primary sources (Wikipedia, Spanish business press —
+Valencia Plaza, Emprendedores): BigBuy is a real company, founded 2012 in
+Valencia, Spain (founders Salvador Esteve and Victor P. Amarnani), ~30,000 m2
+own warehouse in Moncada, ~300,000 SKUs across 20+ categories, EUR110M
+revenue (2022), 95% exported mostly within Europe. Search results also
+show BigBuy hosts its own developer-API landing page and PDF guide on its
+own domain (bigbuy.eu/en/api_bigbuy.html, bigbuy.eu/public/doc/Guia_API_
+BigBuy_EN.pdf) — i.e. the API is BigBuy's own first-party offering, not a
+third party's.
 
-Endpoint paths, auth header, and response field names below were
-cross-checked against public third-party BigBuy API integration code
-(`https://github.com/coresh/dropship-1/blob/master/bigbuy.py`,
-`https://github.com/ejbmagento/api_integration/blob/master/bigbuy.php`)
-since the official PDF guide (bigbuy.eu/public/doc/Guia_API_BigBuy_EN.pdf)
-wasn't fetchable from this environment. Confirmed from those sources:
-base URL `https://api.bigbuy.eu/rest/catalog/`, `Authorization: Bearer
-<token>` header, `products.json`/`productsstock.json` endpoints returning
-the whole catalog in one call (no pagination params), `wholesalePrice`/
-`retailPrice`/`sku`/`category` as flat fields, and per-item stock nested
-as `stocks: [{quantity: ...}]`. Images are a separate `productsimages.json`
-endpoint per the official API surface, so `image_url` here only picks up
-an `image`/`images` field if `products.json` happens to include one —
-call that endpoint too and merge it in if you need images reliably.
-Before going live, still sanity-check a live response against the
-official PDF guide once you have API access —
-if BigBuy changes their response shape, update `_to_product()`
-accordingly; everything downstream only depends on the `Product` objects
-this module returns. Prices are in EUR.
+What's NOT independently confirmed: this session's network policy blocks
+bigbuy.eu outright, so nobody here has actually read that PDF guide or
+hit the live API. The endpoint paths, auth header, and field names coded
+below (base URL `https://api.bigbuy.eu/rest/catalog/`, `Authorization:
+Bearer <token>`, `products.json`/`productsstock.json`, `wholesalePrice`/
+`retailPrice`/`sku`/`category`, stock nested as `stocks: [{quantity:
+...}]`) come from reading public third-party integration code that claims
+to implement that same official API — not from the official docs
+themselves. Treat this as a well-informed best guess, not a verified
+contract: before relying on it, get real BIGBUY_API_KEY, hit
+`products.json` once, and confirm the response actually looks like what
+`_to_product()` below expects. Images are apparently a separate
+`productsimages.json` endpoint per the API's own landing page, so
+`image_url` here only picks up an `image`/`images` field if `products.json`
+happens to already include one — call that endpoint too and merge it in
+if you need images reliably. If the real shape differs, only
+`_to_product()` (and the two requests in `_fetch_catalog_live()`) need to
+change — everything downstream only depends on the `Product` objects this
+module returns. Prices are in EUR.
 
 Mock mode: when no API key is configured (or BIGBUY_MOCK=1 is set),
 this connector reads `tests/fixtures/bigbuy_sample.json` instead of

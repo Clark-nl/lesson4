@@ -109,7 +109,12 @@ PYTHONPATH=src python -m pytest -q
 
 로컬 실행 시에는 프로필에 맞는 `SHOPIFY_SHOP` / `SHOPIFY_ACCESS_TOKEN` 값을(위 KR/NL 값 중 해당하는 것으로) 직접 export 하면 됩니다. GitHub Actions에서는 워크플로가 매트릭스별로 알맞은 시크릿을 자동 매핑합니다.
 
-> **검증 상태**: BigBuy는 스페인 기반 실존 EU 도매/드랍쉬핑 업체가 맞습니다 (자체 창고 3만m², 25만+ SKU, 카테고리 무관, 네덜란드 2-3일 배송) — 공식 사이트(bigbuy.eu)가 이 환경의 네트워크 정책상 직접 접속은 안 됐지만, 공개된 서드파티 BigBuy API 연동 코드로 엔드포인트/인증 방식/응답 필드를 교차 확인했습니다: `https://api.bigbuy.eu/rest/catalog/products.json` · `productsstock.json`, `Authorization: Bearer <token>`, `wholesalePrice`/`retailPrice`/`sku`/`category` 필드, 재고는 `stocks[0].quantity` 중첩 구조. 이 내용은 `platforms/bigbuy.py` 코드에 반영했습니다. 다만 official PDF 가이드(Guia_API_BigBuy_EN.pdf)로 직접 대조하지 못했으므로, MOQ 필드명·페이지네이션 존재 여부·이미지 필드는 실제 API 키 발급 후 응답을 한 번 찍어보고 확인하시길 권장합니다.
+> **검증 상태 (정확히 구분)**
+>
+> - **1차 출처로 확인됨 (확실)**: BigBuy는 2012년 스페인 발렌시아에서 설립된 실존 도매/드랍쉬핑 기업입니다 (창업자 Salvador Esteve, Victor P. Amarnani / 몬카다 소재 창고 약 3만m² / SKU 약 30만개, 20+ 카테고리 / 2022년 매출 1억1000만 유로, 95% 유럽 수출) — 위키피디아·Valencia Plaza·Emprendedores 등 스페인 언론 보도로 확인. 또한 BigBuy가 자사 도메인(bigbuy.eu)에 개발자 API 소개 페이지와 공식 PDF 가이드를 직접 호스팅하고 있다는 것도 검색 결과로 확인 — 즉 **API를 BigBuy 본사가 직접 제공하는 것은 맞고, 서드파티가 만든 게 아닙니다.**
+> - **미확인 (주의 필요)**: 이 세션은 네트워크 정책상 `bigbuy.eu` 도메인 자체를 접속할 수 없어서, 저나 누구도 실제로 그 공식 PDF 가이드나 라이브 API 응답을 직접 읽어보지 못했습니다. 코드 안의 구체적인 엔드포인트 경로(`products.json`, `productsstock.json`)·인증 헤더(`Authorization: Bearer`)·필드명(`wholesalePrice`, `retailPrice`, `stocks[0].quantity` 등)은 **그 공식 API를 구현했다고 주장하는 서드파티 연동 코드**에서 가져온 것이지, 공식 문서를 직접 대조한 게 아닙니다. 즉 "회사와 API 제공 주체"는 확실하지만 "코드에 박아넣은 세부 스펙"은 여전히 잘 만든 추정치 수준입니다.
+>
+> **결론**: 실제 사용 전 `BIGBUY_API_KEY` 발급받아서 `products.json` 한 번 호출해보고, 응답이 `_to_product()`가 기대하는 구조와 맞는지 반드시 확인하세요. 다르면 `platforms/bigbuy.py`의 `_to_product()`와 `_fetch_catalog_live()` 두 곳만 고치면 나머지 파이프라인은 그대로 동작합니다.
 >
 > 오너클랜 GraphQL 스키마 필드명은 공식 Open API 문서 기준으로 작성했으나 마찬가지로 실제 자격증명으로 첫 호출 시 응답 구조를 재확인하는 것을 권장합니다. 스키마가 다르면 해당 플랫폼 모듈의 쿼리/파싱 함수만 맞춰 수정하면 나머지 파이프라인은 그대로 재사용됩니다.
 
