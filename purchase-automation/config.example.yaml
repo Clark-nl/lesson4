@@ -1,0 +1,38 @@
+# 복사 후 config.yaml 로 저장하고 값을 조정하세요.
+# 자격 증명(API 키/토큰)은 여기 넣지 말고 환경 변수 또는 GitHub Actions Secrets 로 관리합니다.
+
+platform: ownerclan  # purchase_pipeline/platforms/ 에 등록된 커넥터 이름
+
+channels:
+  - shopify
+  - coupang
+  - naver
+  - ebay
+
+output_dir: output
+
+scoring:
+  min_margin_rate: 0.15   # 최소 마진율 (판매가 대비)
+  min_stock_qty: 5        # 최소 재고 수량
+  top_n: 50                # 추천 리스트 상위 N개
+  margin_weight: 0.6       # 점수 계산 시 마진율 가중치
+  demand_weight: 0.4       # 점수 계산 시 판매량(수요 신호) 가중치
+
+# 채널별 수수료 추정치. 실제 계약/카테고리별 수수료율로 조정하세요.
+channel_fees:
+  shopify:
+    commission_rate: 0.0
+    payment_fee_rate: 0.029
+    fixed_fee: 0.3
+  coupang:
+    commission_rate: 0.10
+    payment_fee_rate: 0.0
+    fixed_fee: 0
+  naver:
+    commission_rate: 0.0363
+    payment_fee_rate: 0.0
+    fixed_fee: 0
+  ebay:
+    commission_rate: 0.13
+    payment_fee_rate: 0.029
+    fixed_fee: 0.3

@@ -1,0 +1,57 @@
+[
+  {
+    "key": "OC-1001",
+    "name": "무선 이어폰 케이스",
+    "category": { "name": "전자기기" },
+    "price": 8000,
+    "marketPrice": 19900,
+    "quantity": 120,
+    "minPurchaseQty": 1,
+    "sales30d": 340,
+    "image": "https://example.com/images/oc-1001.jpg"
+  },
+  {
+    "key": "OC-1002",
+    "name": "스테인리스 텀블러 500ml",
+    "category": { "name": "생활용품" },
+    "price": 4500,
+    "marketPrice": 12900,
+    "quantity": 45,
+    "minPurchaseQty": 2,
+    "sales30d": 90,
+    "image": "https://example.com/images/oc-1002.jpg"
+  },
+  {
+    "key": "OC-1003",
+    "name": "반려동물 방석",
+    "category": { "name": "반려동물" },
+    "price": 6000,
+    "marketPrice": 9900,
+    "quantity": 8,
+    "minPurchaseQty": 1,
+    "sales30d": 12,
+    "image": "https://example.com/images/oc-1003.jpg"
+  },
+  {
+    "key": "OC-1004",
+    "name": "저재고 한정판 머그컵",
+    "category": { "name": "생활용품" },
+    "price": 3000,
+    "marketPrice": 6900,
+    "quantity": 2,
+    "minPurchaseQty": 1,
+    "sales30d": 5,
+    "image": "https://example.com/images/oc-1004.jpg"
+  },
+  {
+    "key": "OC-1005",
+    "name": "저마진 대량 재고 상품",
+    "category": { "name": "잡화" },
+    "price": 10000,
+    "marketPrice": 10500,
+    "quantity": 500,
+    "minPurchaseQty": 1,
+    "sales30d": 20,
+    "image": "https://example.com/images/oc-1005.jpg"
+  }
+]
