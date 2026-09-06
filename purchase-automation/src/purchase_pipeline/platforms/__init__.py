@@ -1,8 +1,10 @@
 from purchase_pipeline.platforms.base import SourcingPlatform
+from purchase_pipeline.platforms.bigbuy import BigBuyPlatform
 from purchase_pipeline.platforms.ownerclan import OwnerClanPlatform
 
 _REGISTRY: dict[str, type] = {
     "ownerclan": OwnerClanPlatform,
+    "bigbuy": BigBuyPlatform,
 }
 
 
@@ -17,4 +19,4 @@ def get_platform(name: str) -> SourcingPlatform:
     return platform_cls()
 
 
-__all__ = ["SourcingPlatform", "OwnerClanPlatform", "get_platform"]
+__all__ = ["SourcingPlatform", "OwnerClanPlatform", "BigBuyPlatform", "get_platform"]

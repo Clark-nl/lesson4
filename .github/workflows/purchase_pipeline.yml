@@ -2,21 +2,36 @@ name: Purchase List Pipeline
 
 on:
   schedule:
-    # 매일 00:00 UTC = 09:00 KST
+    # 매일 00:00 UTC = 09:00 KST / 02:00 CEST(네덜란드 서머타임 기준)
     - cron: "0 0 * * *"
   workflow_dispatch: {}
 
 jobs:
   generate-purchase-list:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 한국 판매 채널(쿠팡/네이버/이베이 + 자사몰) - 오너클랜 소싱
+          - label: ownerclan-kr
+            config: config.ownerclan.example.yaml
+            shopify_shop_secret: SHOPIFY_SHOP_KR
+            shopify_token_secret: SHOPIFY_ACCESS_TOKEN_KR
+          # 네덜란드/EU 판매 채널(Amazon.nl/Amazon.de + 자사몰) - BigBuy 소싱
+          - label: bigbuy-nl
+            config: config.bigbuy.example.yaml
+            shopify_shop_secret: SHOPIFY_SHOP_NL
+            shopify_token_secret: SHOPIFY_ACCESS_TOKEN_NL
     defaults:
       run:
         working-directory: purchase-automation
     env:
       OWNERCLAN_CLIENT_ID: ${{ secrets.OWNERCLAN_CLIENT_ID }}
       OWNERCLAN_CLIENT_SECRET: ${{ secrets.OWNERCLAN_CLIENT_SECRET }}
-      SHOPIFY_SHOP: ${{ secrets.SHOPIFY_SHOP }}
-      SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+      BIGBUY_API_KEY: ${{ secrets.BIGBUY_API_KEY }}
+      SHOPIFY_SHOP: ${{ secrets[matrix.shopify_shop_secret] }}
+      SHOPIFY_ACCESS_TOKEN: ${{ secrets[matrix.shopify_token_secret] }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - uses: actions/checkout@v4
@@ -31,12 +46,12 @@ jobs:
       - name: Run tests
         run: PYTHONPATH=src python -m pytest -q
 
-      - name: Run purchase list pipeline
-        run: PYTHONPATH=src python -m purchase_pipeline.pipeline --config config.example.yaml
+      - name: Run purchase list pipeline (${{ matrix.label }})
+        run: PYTHONPATH=src python -m purchase_pipeline.pipeline --config ${{ matrix.config }}
 
-      - name: Upload purchase list artifacts
+      - name: Upload purchase list artifacts (${{ matrix.label }})
         uses: actions/upload-artifact@v4
         with:
-          name: purchase-list-${{ github.run_id }}
+          name: purchase-list-${{ matrix.label }}-${{ github.run_id }}
           path: purchase-automation/output/
           retention-days: 30

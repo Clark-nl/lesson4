@@ -20,7 +20,7 @@ from purchase_pipeline.scoring import score_products
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-MARKETPLACE_CHANNELS = {"coupang", "naver", "ebay"}
+MARKETPLACE_CHANNELS = {"coupang", "naver", "ebay", "amazon_nl", "amazon_de"}
 
 
 def run(config_path: str, dry_run: bool = False) -> None:

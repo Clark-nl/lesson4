@@ -1,0 +1,36 @@
+# 복사 후 config.yaml 로 저장하고 값을 조정하세요.
+# 네덜란드(EU) 시장 판매용 프로필: BigBuy(EU 창고, 카테고리 무관 도매) 소싱
+# 자격 증명(API 키/토큰)은 여기 넣지 말고 환경 변수 또는 GitHub Actions Secrets 로 관리합니다.
+# 금액 단위: EUR
+
+platform: bigbuy  # purchase_pipeline/platforms/ 에 등록된 커넥터 이름
+
+channels:
+  - shopify
+  - amazon_nl
+  - amazon_de
+
+output_dir: output/bigbuy
+
+scoring:
+  min_margin_rate: 0.20   # EU 채널 수수료가 높아 최소 마진율을 더 보수적으로 설정
+  min_stock_qty: 3
+  top_n: 50
+  # BigBuy는 판매량 데이터를 제공하지 않는 도매 공급사이므로 마진율에만 가중치를 둡니다.
+  margin_weight: 1.0
+  demand_weight: 0.0
+
+# 채널별 수수료 추정치 (EUR). 실제 계약/카테고리별 수수료율로 조정하세요.
+channel_fees:
+  shopify:
+    commission_rate: 0.0
+    payment_fee_rate: 0.015   # Shopify Payments (EU) 대략치
+    fixed_fee: 0.25
+  amazon_nl:
+    commission_rate: 0.15     # Amazon 카테고리별 추천 수수료(referral fee) 평균치
+    payment_fee_rate: 0.0
+    fixed_fee: 0
+  amazon_de:
+    commission_rate: 0.15
+    payment_fee_rate: 0.0
+    fixed_fee: 0

@@ -1,0 +1,57 @@
+[
+  {
+    "id": 2001,
+    "sku": "BB-2001",
+    "name": "Wireless Earbuds Charging Case",
+    "category": "Electronics",
+    "wholesalePrice": 6.80,
+    "retailPrice": 19.95,
+    "quantity": 300,
+    "minQuantity": 1,
+    "image": "https://example.com/images/bb-2001.jpg"
+  },
+  {
+    "id": 2002,
+    "sku": "BB-2002",
+    "name": "Stainless Steel Water Bottle 500ml",
+    "category": "Home & Living",
+    "wholesalePrice": 3.40,
+    "retailPrice": 12.50,
+    "quantity": 150,
+    "minQuantity": 1,
+    "image": "https://example.com/images/bb-2002.jpg"
+  },
+  {
+    "id": 2003,
+    "sku": "BB-2003",
+    "name": "Pet Cushion Bed",
+    "category": "Pets",
+    "wholesalePrice": 5.10,
+    "retailPrice": 9.90,
+    "quantity": 6,
+    "minQuantity": 1,
+    "image": "https://example.com/images/bb-2003.jpg"
+  },
+  {
+    "id": 2004,
+    "sku": "BB-2004",
+    "name": "Low Stock Ceramic Mug",
+    "category": "Home & Living",
+    "wholesalePrice": 2.20,
+    "retailPrice": 6.50,
+    "quantity": 1,
+    "minQuantity": 1,
+    "image": "https://example.com/images/bb-2004.jpg"
+  },
+  {
+    "id": 2005,
+    "sku": "BB-2005",
+    "name": "Low Margin Bulk Item",
+    "category": "Misc",
+    "wholesalePrice": 9.00,
+    "retailPrice": 9.50,
+    "quantity": 1000,
+    "minQuantity": 1,
+    "image": "https://example.com/images/bb-2005.jpg"
+  }
+]
