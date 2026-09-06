@@ -100,17 +100,86 @@ This fetches recent price history for your watchlist, generates
 signals, and "executes" any BUY/SELL against a simulated `FakeBroker`
 account. Nothing leaves your machine.
 
+### Opening and configuring your IBKR account (do this once)
+
+This is the part most people get stuck on, since it happens entirely on
+IBKR's website/app and has nothing to do with the code in this repo.
+
+1. **Account type.** Choose **Cash Account**, not Margin. Kronos never
+   borrows or shorts, and all of its risk limits assume positions are
+   paid for in full with cash. A margin account lets you (or a bug)
+   lose more than the account is worth, which defeats the point of the
+   caps in `config/kronos.yaml`.
+2. **Base currency.** Set it to **EUR** if most of your trading will be
+   on Euronext Amsterdam (AEB). If your account's base currency is
+   something else (e.g. USD), buying EUR-denominated stocks will
+   trigger automatic FX conversion (and FX fees) on every trade unless
+   you hold EUR cash yourself — see "Funding & currency" below.
+3. **Trading permissions / products.** During account opening (or later
+   under `Settings → Account Settings → Trading Experience & Permissions`),
+   make sure **Stocks** is enabled for the **Netherlands (Euronext
+   Amsterdam)** exchange specifically — IBKR asks about trading
+   experience per exchange/product and won't let you place AEB orders
+   until that's approved. Add other Euronext markets (Brussels, Paris)
+   too if your watchlist ever includes them.
+4. **Stock Yield Enhancement Program.** This is IBKR lending out shares
+   you hold to other traders (e.g. short sellers) for a fee. It's
+   unrelated to trading itself. Recommendation for use with Kronos:
+   **leave it unchecked / not enrolled** — Kronos doesn't account for
+   shares being on loan, and it adds tax/settlement complexity for no
+   benefit to what the bot does. You can always enable it later by
+   itself, separately from the bot.
+5. **Market data subscriptions.** This is the step most likely to break
+   `IBKRBroker.get_last_price()` silently: by default a new account has
+   **no live European market data**, only delayed (15-minute) quotes.
+   Go to `Settings → User Settings → Market Data Subscriptions` and
+   subscribe to at least **"Euronext Amsterdam, Brussels, Lisbon, Paris"**
+   (a small monthly fee, often waived if your commissions exceed it).
+   Without this, `reqMktData` can return `NaN`/stale prices and Kronos
+   will raise `RuntimeError("Could not get a valid last price ...")`.
+6. **KYC / financial questionnaire** (annual net income, net worth,
+   trading experience, etc.) — this is a regulatory requirement IBKR
+   needs directly from you; answer accurately, Kronos has no part in it.
+7. **Funding & currency.** Wire or transfer EUR into the account. If you
+   fund in another currency, either convert to EUR yourself in
+   `Client Portal → Transfer & Pay → Currency Conversion` before trading,
+   or accept that IBKR will do it automatically at trade time (worse
+   FX rate, extra step to review in your account activity).
+8. **Paper trading account.** Once your live application is submitted
+   (it doesn't have to be fully approved yet), IBKR automatically
+   provisions a linked **paper trading account** with simulated money —
+   this is what step "Running against IBKR paper trading" below uses,
+   and there's no reason to skip straight to real money.
+
 ### Running against IBKR paper trading
 
 1. Install [Trader Workstation (TWS)](https://www.interactivebrokers.com/en/trading/tws.php)
-   or IB Gateway, and log in to a **paper trading** account.
-2. In TWS/Gateway: `Configuration → API → Settings` → enable
-   "Enable ActiveX and Socket Clients", and note the socket port
-   (default `7497` for TWS paper).
-3. Set `ibkr.port` in your config (or `KRONOS_IBKR_PORT`) to match.
-4. Even with `live_trading=true` against a paper account, all the same
+   or **IB Gateway** (same API, no charts/UI — lighter weight and
+   generally preferred for running a bot unattended), and log in with
+   your **paper trading** username (IBKR appends something like `abc123`
+   to your live username for the paper login — check Client Portal →
+   Settings → Paper Trading Account for the exact credentials).
+2. In TWS/Gateway: `Configuration/Edit → Global Configuration → API → Settings`
+   → check **"Enable ActiveX and Socket Clients"**, and note the socket
+   port (default `7497` for TWS paper, `4002` for Gateway paper). Also
+   consider unchecking "Read-Only API" (it's checked by default and
+   would silently block every order Kronos tries to place).
+3. Under the same API Settings, add `127.0.0.1` to **"Trusted IPs"** if
+   Kronos runs on the same machine (the default and recommended setup —
+   see the security note below if not).
+4. Set `ibkr.port` in your config (or `KRONOS_IBKR_PORT`) to match, and
+   `ibkr.client_id` to any integer not already used by another API
+   connection to the same TWS/Gateway instance.
+5. TWS/Gateway must be **running and logged in** for `IBKRBroker.connect()`
+   to succeed — there is no purely-cloud/headless mode; think of it as
+   the always-on bridge between Kronos and IBKR's servers. IBKR also
+   auto-logs-out TWS roughly once every 24 hours, so a long-running bot
+   needs either the auto-restart setting in TWS or IB Gateway's simpler
+   daily-restart behavior.
+6. Even with `live_trading=true` against a paper account, all the same
    risk limits and the approval prompt still apply — this is the right
-   place to rehearse the full flow before ever touching a live account.
+   place to rehearse the full flow (including a few real BUY/SELL round
+   trips) before ever touching a live account.
 
 ### Going live (real money)
 
@@ -123,6 +192,12 @@ KRONOS_LIVE_TRADING=true python scripts/run_kronos.py --config config/kronos.yam
   risk limits in your config — they are real caps on real money.
 - You will be prompted to type `yes` for every single order before it
   is sent to IBKR.
+- **Security note:** the TWS/IB Gateway API port has no authentication
+  of its own beyond "Trusted IPs" — anyone who can reach that port on
+  your machine can trade on your account. Never expose it to the
+  internet directly; if Kronos runs on a different machine than
+  TWS/Gateway, put it behind a VPN or SSH tunnel rather than opening
+  the port publicly.
 
 ### Tests
 
