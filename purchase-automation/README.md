@@ -8,6 +8,7 @@ Zentrada 외에 다른 소싱 플랫폼에서도 동일한 방식으로 "구매 
 | `config.syncee.example.yaml` (기본, 최대한 무료 지향) | 네덜란드/EU: 이미 Shopify에 있는 상품 중 Amazon.nl/Amazon.de에도 올릴 것 선별 | Syncee (Shopify 스토어 자체를 읽음) | **파이프라인 추가 비용 0원** (Shopify+Syncee 요금은 어차피 필요) | EUR |
 | `config.dropxl.example.yaml` (대안) | 네덜란드/EU: 자사몰(Shopify) + Amazon.nl/Amazon.de | dropXL (vidaXL) | €30/월 | EUR |
 | `config.bigbuy.example.yaml` (대안) | 〃 | BigBuy | €69~99/월 + 가입비 €45~90 | EUR |
+| `config.csv_import.example.yaml` (대안, API 전혀 불필요) | 〃 | 아무 사이트에서나 손으로 내려받은 CSV | **0원** | 파일에 적힌 대로 |
 
 ## 왜 이 플랫폼인가
 
@@ -21,9 +22,25 @@ Zentrada 외에 다른 소싱 플랫폼에서도 동일한 방식으로 "구매 
 | dropXL | 월 30유로, 판매 수수료 없음 | 네덜란드 자체 기업(vidaXL) → NL 배송 최快, API/CSV·XML 피드. 카테고리는 홈/가든/스포츠 등으로 제한적 |
 | **Syncee (현재 기본값 — 최대한 무료)** | **파이프라인 입장에서 추가 비용 0원** | Syncee 자체는 무료~월 $19+ 플랜이 있지만, 애초에 **서버가 호출할 REST API가 없는** Shopify/WooCommerce 앱입니다 — 상품을 스토어에 직접 동기화하는 방식. 그래서 이 프로필은 Syncee API를 호출하는 대신, **Syncee가 이미 채워 넣은 내 Shopify 스토어 카탈로그를 그대로 읽어서**(원가 = Shopify의 "Cost per item" 필드) 그중 Amazon.nl/de에도 올릴 가치가 있는 상품을 골라줍니다. Shopify 계정은 어차피 있어야 하므로 이 파이프라인이 추가로 요구하는 비용/API는 없습니다. |
 
-세 가지 다 코드로 구현되어 있으니, 카테고리 무관이 꼭 필요하면 BigBuy, 전용 API/피드가 필요하면 dropXL, 비용을 최우선하면 기본값인 Syncee 프로필을 쓰면 됩니다. 셋 다 `config: config.<이름>.example.yaml`만 바꾸면 전환됩니다.
+**+ CSV 파일 임포트 (API 자체가 아예 필요 없는 마지막 옵션)** — Syncee 프로필조차 "이미 Shopify에 있는 상품만" 다룰 수 있다는 한계가 있습니다. 아직 사입 전인 **신규 상품**을 API 키 없이 추천받고 싶다면: Syncee/dropXL/도매매 등 아무 사이트에서나 상품 목록을 CSV로 내려받아(대부분의 도매 사이트는 "카탈로그 다운로드" 버튼을 제공합니다) `config.csv_import.example.yaml`의 `CSV_IMPORT_SOURCE`에 그 파일 경로나 URL만 넣으면 됩니다. 등록도, API 키 발급도, 구독도 필요 없습니다.
 
-이 저장소는 **오너클랜 · BigBuy · dropXL · Syncee(Shopify 카탈로그 읽기)** 네 커넥터를 구현했고, 다른 플랫폼은 `src/purchase_pipeline/platforms/base.py`의 `SourcingPlatform` 인터페이스만 구현하면 동일한 파이프라인에 바로 연결됩니다.
+네 가지 다 코드로 구현되어 있으니, 카테고리 무관이 꼭 필요하면 BigBuy, 전용 API/피드가 필요하면 dropXL, 이미 Shopify에 올려둔 상품 재평가면 Syncee, 신규 상품을 API 없이 훑어보고 싶으면 csv_import를 쓰면 됩니다. `config: config.<이름>.example.yaml`만 바꾸면 전환됩니다.
+
+이 저장소는 **오너클랜 · BigBuy · dropXL · Syncee(Shopify 카탈로그 읽기) · csv_import(파일 기반)** 다섯 커넥터를 구현했고, 다른 플랫폼은 `src/purchase_pipeline/platforms/base.py`의 `SourcingPlatform` 인터페이스만 구현하면 동일한 파이프라인에 바로 연결됩니다.
+
+## 트렌드 상품 리서치 (신규 상품 아이디어)
+
+csv_import 프로필로 "새로 뭘 사입할지" 판단하려면 후보 상품 아이디어가 먼저 있어야 합니다. 2026년 기준 웹 검색으로 확인한 EU/네덜란드 트렌드 카테고리·아이템입니다 (직접 검증한 매출 데이터가 아니라 여러 트렌드 리포트의 교차 결과이니 참고용으로만 쓰세요):
+
+- **웰니스/헬스 소품**: 레드라이트 테라피 마스크, 자세교정 밴드, 무게추 인형(웨이티드 플러시) — 마진 30~65%대로 보고됨
+- **지속가능/친환경**: 재사용 물병, 대나무 소재 주방용품 — 특히 독일·네덜란드·스웨덴에서 강세
+- **스마트홈 소품**: 스마트 도어록, 스마트 플러그, 앱 연동 LED 스트립
+- **펫 카테고리**: Bol.com에서 몇 년째 꾸준히 성장 중 (사료, 장난감, 방석 등)
+- **가전/전자**: Bol.com·Amazon 공통으로 최대 카테고리 — 로봇청소기, 스마트조명이 2026년 특히 강세
+
+**활용 흐름**: 위 키워드로 Syncee/dropXL 사이트에서 직접 검색 → 마음에 드는 상품들을 후보 리스트로 CSV로 내려받거나 직접 표로 정리 → `config.csv_import.example.yaml`로 실행해서 마진율 기준 최종 추천 리스트를 뽑습니다.
+
+Sources: [dodropshipping.com - Netherlands dropshipping products](https://nichedropshipping.com/best-dropshipping-products-for-the-netherlands/), [cjdropshipping.com - trending products 2026](https://cjdropshipping.com/blogs/winning-products/10-Top-Trending-Dropshipping-Products), [dropified.com - top 50 trending products with margins](https://www.dropified.com/blog/top-50-trending-dropshipping-products-to-sell-in-2026-with-profit-margins/), [zunapro.com - Bol.com top categories](https://www.zunapro.com/netherlands/en/blog/dutch-marketplaces-best-platforms-selling-online)
 
 ## 아키텍처
 
@@ -59,6 +76,7 @@ purchase-automation/
   config.syncee.example.yaml      # 네덜란드/EU 프로필 템플릿 (기본, 최대한 무료)
   config.dropxl.example.yaml      # 네덜란드/EU 프로필 템플릿 (대안, 월 30유로 + 전용 피드)
   config.bigbuy.example.yaml      # 네덜란드/EU 프로필 템플릿 (대안, 카테고리 무관이 필요할 때)
+  config.csv_import.example.yaml  # 네덜란드/EU 프로필 템플릿 (대안, API 전혀 불필요·비용 0원)
   requirements.txt
   src/purchase_pipeline/
     models.py                  # Product / ChannelFee / PurchaseListItem
@@ -70,19 +88,22 @@ purchase-automation/
       base.py                  # 새 플랫폼 추가 시 구현할 인터페이스
       ownerclan.py              # 오너클랜 커넥터 (mock 모드 지원)
       bigbuy.py                 # BigBuy 커넥터 (mock 모드 지원)
+      csv_utils.py               # dropxl.py/csv_import.py가 공유하는 CSV 파싱 헬퍼
       dropxl.py                 # dropXL 커넥터 (CSV/XML 피드, 컬럼 매핑 설정 가능, mock 모드 지원)
       syncee.py                 # "Syncee" 커넥터 = 실제로는 내 Shopify 카탈로그를 읽음 (mock 모드 지원)
+      csv_import.py              # 아무 CSV 파일/URL이나 읽는 범용 커넥터 (API 불필요, mock 모드 지원)
     exporters/
       csv_exporter.py           # 전체 추천 리스트 CSV
       marketplace_exporter.py   # 오픈마켓 벌크업로드용 CSV (쿠팡/네이버/이베이/Amazon.nl/Amazon.de)
       shopify_exporter.py       # Shopify 임시상품(draft) 등록
   tests/
-    fixtures/{ownerclan,bigbuy}_sample.json, dropxl_sample.csv, syncee_shopify_sample.json
+    fixtures/{ownerclan,bigbuy}_sample.json, dropxl_sample.csv, syncee_shopify_sample.json, csv_import_sample.csv
     test_scoring.py
     test_ownerclan_platform.py
     test_bigbuy_platform.py
     test_dropxl_platform.py
     test_syncee_platform.py
+    test_csv_import_platform.py
 ```
 
 ## 로컬 실행
@@ -107,13 +128,18 @@ PYTHONPATH=src python -m purchase_pipeline.pipeline --config config.yaml --dry-r
 cp config.bigbuy.example.yaml config.yaml
 PYTHONPATH=src python -m purchase_pipeline.pipeline --config config.yaml --dry-run
 
+# 네덜란드/EU(csv_import, API/구독 전혀 불필요) 프로필
+# 아무 사이트에서 내려받은 CSV를 CSV_IMPORT_SOURCE로 지정 (없으면 mock 데이터로 데모)
+cp config.csv_import.example.yaml config.yaml
+CSV_IMPORT_SOURCE=/path/to/your_shortlist.csv PYTHONPATH=src python -m purchase_pipeline.pipeline --config config.yaml --dry-run
+
 # 테스트
 PYTHONPATH=src python -m pytest -q
 ```
 
 자격 증명 없이 실행하면 해당 플랫폼 커넥터가 자동으로 mock 모드(fixture 데이터)로 동작합니다.
 
-실행 결과는 각 프로필의 `output_dir`(오너클랜: `output/`, Syncee: `output/syncee/`, dropXL: `output/dropxl/`, BigBuy: `output/bigbuy/`) 아래에 `purchase_list_YYYY-MM-DD.csv`(전체 추천 리스트)와 채널별 벌크업로드 CSV(`{coupang,naver,ebay,amazon_nl,amazon_de}_YYYY-MM-DD.csv`)로 생성됩니다.
+실행 결과는 각 프로필의 `output_dir`(오너클랜: `output/`, Syncee: `output/syncee/`, dropXL: `output/dropxl/`, BigBuy: `output/bigbuy/`, csv_import: `output/csv_import/`) 아래에 `purchase_list_YYYY-MM-DD.csv`(전체 추천 리스트)와 채널별 벌크업로드 CSV(`{coupang,naver,ebay,amazon_nl,amazon_de}_YYYY-MM-DD.csv`)로 생성됩니다.
 
 ## 실제 API 연동하기
 
@@ -127,12 +153,14 @@ PYTHONPATH=src python -m pytest -q
 | `DROPXL_FEED_URL` | dropXL 계정 설정에서 발급받는 상품 피드 URL (CSV/XML) — dropxl 프로필을 쓸 때만 필요 |
 | `DROPXL_API_KEY` | dropXL API 키 (선택) — dropxl 프로필을 쓸 때만 필요 |
 | `BIGBUY_API_KEY` | BigBuy REST API 키 (판매자 패널에서 발급) — bigbuy 프로필을 쓸 때만 필요 |
+| `CSV_IMPORT_SOURCE` | CSV 파일 경로 또는 공개 URL — csv_import 프로필을 쓸 때만 필요, 그 외엔 자격 증명 자체가 없음 |
 | `SLACK_WEBHOOK_URL` | 실행 결과 요약을 받을 Slack Incoming Webhook (선택, 모든 프로필 공용) |
 
 로컬 실행 시에는 프로필에 맞는 `SHOPIFY_SHOP` / `SHOPIFY_ACCESS_TOKEN` 값을(위 KR/NL 값 중 해당하는 것으로) 직접 export 하면 됩니다. GitHub Actions에서는 워크플로가 매트릭스별로 알맞은 시크릿을 자동 매핑합니다.
 
 > **검증 상태 (정확히 구분해서 적습니다)**
 >
+> - **csv_import**: 이건 애초에 검증할 "외부 API"가 없습니다 — 당신이 준 파일을 그대로 읽을 뿐이라, 정확성은 전적으로 당신이 CSV_IMPORT_SOURCE에 넣는 파일의 품질에 달려 있습니다. 트렌드 상품 리서치 부분(위 섹션)은 여러 트렌드 블로그를 교차 검색한 결과이지, 실제 매출/재고 데이터로 검증한 것은 아니니 실제 사입 전 반드시 직접 확인하세요.
 > - **Syncee**: Syncee가 실제로 존재하는 회사이자 Shopify/WooCommerce 등 커머스 플랫폼용 "앱"으로 동작한다는 것, 그리고 **서버가 직접 호출할 수 있는 공개 REST API가 없다**는 것은 검색으로 확인했습니다 (공식 개발자 API 문서를 찾지 못했고, 있는 건 앱 설치·JSON/CSV 파일 가져오기 기능뿐). 그래서 이 프로필은 Syncee를 호출하는 척 코드를 짜지 않고, 대신 검증된 사실만으로 설계했습니다: Shopify Admin REST API의 상품/재고 조회와 `InventoryItem.cost`("Cost per item") 필드는 Shopify 자체의 공식 기능이라 훨씬 신뢰도가 높습니다. **다만 이 방식이 실제로 유효하려면 Syncee(또는 어떤 공급사 앱이든)가 상품을 Shopify에 동기화할 때 "Cost per item" 필드까지 채워 넣어야 합니다** — 안 채워지면 그 상품은 원가를 알 수 없어 자동으로 스킵됩니다(`platforms/syncee.py`의 `_build_products` 참고). 실제 스토어에서 한 번 확인해보세요.
 > - **dropXL**: vidaXL은 약 20년 된 네덜란드 벤로 소재 실존 기업(매출 4억 달러+)이고, 드랍쉬핑 프로그램이 2025년 10월 "dropshippingXL"에서 "dropXL"로 리브랜딩됐다는 것까지는 공개 기사로 확인했습니다. 월 30유로 요금제, CSV/XML 피드 제공도 여러 소스에서 일치합니다. **다만 실제 피드 URL의 정확한 컬럼명은 계정별로 발급되는 것이라 공개 문서로 확인할 방법이 없었습니다** — 그래서 `platforms/dropxl.py`는 컬럼명을 하드코딩하지 않고 `column_map`으로 설정에서 조정하도록 만들었습니다.
 > - **BigBuy**: 회사(2012년 스페인 발렌시아 설립)와 "API를 BigBuy 본사가 자사 도메인에서 직접 제공한다"는 사실은 1차 출처로 확인했습니다. 하지만 코드 속 엔드포인트 경로·필드명은 이 세션에서 bigbuy.eu 접속이 막혀 있어 서드파티 연동 코드를 참고해 작성한 것이라, 실제 API 키로 한 번 확인이 필요합니다.

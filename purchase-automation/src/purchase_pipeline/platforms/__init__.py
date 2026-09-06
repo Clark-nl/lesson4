@@ -1,5 +1,6 @@
 from purchase_pipeline.platforms.base import SourcingPlatform
 from purchase_pipeline.platforms.bigbuy import BigBuyPlatform
+from purchase_pipeline.platforms.csv_import import CSVImportPlatform
 from purchase_pipeline.platforms.dropxl import DropXLPlatform
 from purchase_pipeline.platforms.ownerclan import OwnerClanPlatform
 from purchase_pipeline.platforms.syncee import SynceePlatform
@@ -9,6 +10,7 @@ _REGISTRY: dict[str, type] = {
     "bigbuy": BigBuyPlatform,
     "dropxl": DropXLPlatform,
     "syncee": SynceePlatform,
+    "csv_import": CSVImportPlatform,
 }
 
 
@@ -29,5 +31,6 @@ __all__ = [
     "BigBuyPlatform",
     "DropXLPlatform",
     "SynceePlatform",
+    "CSVImportPlatform",
     "get_platform",
 ]

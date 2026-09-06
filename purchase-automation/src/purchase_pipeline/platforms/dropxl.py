@@ -19,21 +19,20 @@ settings), not documented in any public page this session could reach.
 So unlike ownerclan.py/bigbuy.py, this connector does NOT hardcode a
 base URL or field names — it fetches whatever feed URL you paste into
 DROPXL_FEED_URL (copy it from your dropXL account settings) and maps
-columns using CSV_COLUMN_MAP below, which you should edit to match your
-actual feed's header row once you have a real account. Guessing exact
-column names here would just be a second unverified guess dressed up as
-code, which is exactly what BigBuy's connector already got called out
-for once - so this one is deliberately configurable instead.
+columns using column_map (see csv_utils.DEFAULT_CSV_COLUMN_MAP), which
+you should edit to match your actual feed's header row once you have a
+real account. Guessing exact column names here would just be a second
+unverified guess dressed up as code, which is exactly what BigBuy's
+connector already got called out for once - so this one is deliberately
+configurable instead.
 
 Mock mode: when no feed URL is configured (or DROPXL_MOCK=1 is set),
 this connector reads `tests/fixtures/dropxl_sample.csv` (using the
-default CSV_COLUMN_MAP) instead of calling the network.
+default column_map) instead of calling the network.
 """
 
 from __future__ import annotations
 
-import csv
-import io
 import logging
 import os
 from pathlib import Path
@@ -41,18 +40,9 @@ from pathlib import Path
 import requests
 
 from purchase_pipeline.models import Product
+from purchase_pipeline.platforms.csv_utils import DEFAULT_CSV_COLUMN_MAP, parse_csv_products
 
 logger = logging.getLogger(__name__)
-
-# Edit these to match your actual dropXL feed's header row.
-DEFAULT_CSV_COLUMN_MAP = {
-    "sku": "sku",
-    "name": "name",
-    "wholesale_price": "wholesale_price",
-    "retail_price": "retail_price",
-    "stock": "stock",
-    "category": "category",
-}
 
 _FIXTURE_PATH = (
     Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "dropxl_sample.csv"
@@ -80,34 +70,14 @@ class DropXLPlatform:
             logger.info("DropXLPlatform running in mock mode (fixture data, no network calls).")
 
     def fetch_catalog(self) -> list[Product]:
-        if self.mock:
-            return self._parse_csv(_FIXTURE_PATH.read_text(encoding="utf-8"))
-        return self._fetch_catalog_live()
+        text = _FIXTURE_PATH.read_text(encoding="utf-8") if self.mock else self._fetch_feed_text()
+        return self._parse_csv(text)
 
-    def _fetch_catalog_live(self) -> list[Product]:
+    def _parse_csv(self, text: str) -> list[Product]:
+        return parse_csv_products(text, self.column_map, self.name)
+
+    def _fetch_feed_text(self) -> str:
         headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
         resp = requests.get(self.feed_url, headers=headers, timeout=60)
         resp.raise_for_status()
-        return self._parse_csv(resp.text)
-
-    def _parse_csv(self, text: str) -> list[Product]:
-        reader = csv.DictReader(io.StringIO(text))
-        return [self._to_product(row) for row in reader]
-
-    def _to_product(self, row: dict) -> Product:
-        col = self.column_map
-        return Product(
-            platform=self.name,
-            sku=row.get(col["sku"], ""),
-            name=row.get(col["name"], ""),
-            cost_price=float(row.get(col["wholesale_price"]) or 0),
-            recommended_retail_price=(
-                float(row[col["retail_price"]]) if row.get(col["retail_price"]) else None
-            ),
-            stock_qty=int(float(row.get(col["stock"]) or 0)),
-            category=row.get(col["category"], "Other"),
-            moq=1,  # dropXL is a single-unit dropship feed; no MOQ column expected
-            sold_last_30d=None,  # no sales-velocity data in the product feed
-            image_url=row.get("image_url") or row.get("image"),
-            raw=row,
-        )
+        return resp.text

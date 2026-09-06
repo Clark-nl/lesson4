@@ -1,0 +1,7 @@
+sku,name,wholesale_price,retail_price,stock,category,image_url
+CI-001,Weighted Dinosaur Plush 2kg,7.50,24.95,150,Home Decor,https://example.com/images/ci-001.jpg
+CI-002,Red Light Therapy Mask,14.00,49.95,80,Beauty & Wellness,https://example.com/images/ci-002.jpg
+CI-003,Posture Corrector Brace,4.20,19.95,200,Health & Wellness,https://example.com/images/ci-003.jpg
+CI-004,Reusable BPA-Free Water Bottle 750ml,3.10,17.95,300,Home & Kitchen,https://example.com/images/ci-004.jpg
+CI-005,Smart Door Knob (Keyless Entry),22.00,69.95,25,Smart Home,https://example.com/images/ci-005.jpg
+CI-006,Low Stock Sample Item,5.00,9.00,1,Misc,https://example.com/images/ci-006.jpg
