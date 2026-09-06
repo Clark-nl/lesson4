@@ -1,0 +1,40 @@
+# Kronos configuration example.
+# Copy this to config/kronos.yaml and adjust. Anything here can be
+# overridden by an environment variable of the form KRONOS_* (see
+# kronos/config.py and .env.example) -- env vars always win, so you can
+# keep this file checked in with safe defaults and override secrets /
+# per-machine values via environment.
+
+# Master safe/live switch. Leave this false until you have fully tested
+# the dry run and are ready to trade with real money.
+live_trading: false
+
+# Must stay true whenever live_trading is true -- Kronos refuses to
+# start otherwise. Every live order is confirmed interactively.
+require_human_approval: true
+
+# Plain symbols; Kronos maps these to the right Yahoo Finance ticker and
+# IBKR contract for the configured exchange (e.g. "ASML" -> "ASML.AS").
+watchlist:
+  - ASML
+  - ADYEN
+  - INGA
+
+risk:
+  max_order_value_eur: 500      # hard cap per single order
+  max_daily_loss_eur: 250       # trading halts for the day past this loss
+  max_position_value_eur: 2000  # hard cap on total exposure per symbol
+  max_orders_per_day: 10
+
+ibkr:
+  host: 127.0.0.1
+  port: 7497        # 7497 = TWS paper, 7496 = TWS live, 4002 = Gateway paper, 4001 = Gateway live
+  client_id: 7
+  account: null      # your IBKR account id, or leave null to use the default
+  exchange: AEB      # Euronext Amsterdam
+  currency: EUR
+
+# Optional: let an LLM read recent headlines and blend a "news vibe"
+# score into the strategy. Requires ANTHROPIC_API_KEY and a news_provider
+# callback wired up in code (see kronos/strategy/vibe.py). Off by default.
+use_llm_vibe: false

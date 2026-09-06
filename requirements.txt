@@ -1,0 +1,12 @@
+pandas>=2.0
+numpy>=1.24
+yfinance>=0.2.40
+ib_insync>=0.9.86
+python-dotenv>=1.0
+PyYAML>=6.0
+
+# Optional, only needed if use_llm_vibe is enabled
+anthropic>=0.30
+
+# Dev / test
+pytest>=7.4
