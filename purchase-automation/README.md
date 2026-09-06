@@ -109,7 +109,9 @@ PYTHONPATH=src python -m pytest -q
 
 로컬 실행 시에는 프로필에 맞는 `SHOPIFY_SHOP` / `SHOPIFY_ACCESS_TOKEN` 값을(위 KR/NL 값 중 해당하는 것으로) 직접 export 하면 됩니다. GitHub Actions에서는 워크플로가 매트릭스별로 알맞은 시크릿을 자동 매핑합니다.
 
-> 오너클랜 GraphQL / BigBuy REST 스키마 필드명은 각 사 공식 API 문서 기준으로 작성했습니다. 스키마가 변경되면 해당 플랫폼 모듈의 쿼리/파싱 함수만 맞춰 수정하면 나머지 파이프라인은 그대로 재사용됩니다.
+> **검증 상태**: BigBuy는 스페인 기반 실존 EU 도매/드랍쉬핑 업체가 맞습니다 (자체 창고 3만m², 25만+ SKU, 카테고리 무관, 네덜란드 2-3일 배송) — 공식 사이트(bigbuy.eu)가 이 환경의 네트워크 정책상 직접 접속은 안 됐지만, 공개된 서드파티 BigBuy API 연동 코드로 엔드포인트/인증 방식/응답 필드를 교차 확인했습니다: `https://api.bigbuy.eu/rest/catalog/products.json` · `productsstock.json`, `Authorization: Bearer <token>`, `wholesalePrice`/`retailPrice`/`sku`/`category` 필드, 재고는 `stocks[0].quantity` 중첩 구조. 이 내용은 `platforms/bigbuy.py` 코드에 반영했습니다. 다만 official PDF 가이드(Guia_API_BigBuy_EN.pdf)로 직접 대조하지 못했으므로, MOQ 필드명·페이지네이션 존재 여부·이미지 필드는 실제 API 키 발급 후 응답을 한 번 찍어보고 확인하시길 권장합니다.
+>
+> 오너클랜 GraphQL 스키마 필드명은 공식 Open API 문서 기준으로 작성했으나 마찬가지로 실제 자격증명으로 첫 호출 시 응답 구조를 재확인하는 것을 권장합니다. 스키마가 다르면 해당 플랫폼 모듈의 쿼리/파싱 함수만 맞춰 수정하면 나머지 파이프라인은 그대로 재사용됩니다.
 
 오픈마켓 API(쿠팡 Wing, 네이버 커머스, Amazon SP-API)는 셀러별 카테고리 매핑과 사전 승인이 필요해 우선 벌크업로드 CSV 형태로 산출하도록 했습니다. API 승인을 받으면 `marketplace_exporter.py`가 만드는 컬럼을 그대로 API 페이로드에 매핑하면 됩니다.
 
