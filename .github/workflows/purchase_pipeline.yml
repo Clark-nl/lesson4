@@ -18,11 +18,13 @@ jobs:
             config: config.ownerclan.example.yaml
             shopify_shop_secret: SHOPIFY_SHOP_KR
             shopify_token_secret: SHOPIFY_ACCESS_TOKEN_KR
-          # 네덜란드/EU 판매 채널(Amazon.nl/Amazon.de + 자사몰) - dropXL 소싱
-          # (BigBuy는 월 69~99유로+가입비로 비용이 높아 월 30유로인 dropXL로 교체함;
-          #  config.bigbuy.example.yaml은 계속 사용 가능하니 원하면 이 항목을 되돌리면 됨)
-          - label: dropxl-nl
-            config: config.dropxl.example.yaml
+          # 네덜란드/EU 판매 채널(Amazon.nl/Amazon.de) - Syncee 소싱
+          # (최대한 무료로: Syncee는 서버 API가 없어 별도 플랫폼 API 비용이 0원 -
+          #  이미 있는 Shopify 스토어 카탈로그를 읽어서 스코어링함. 비용 대신
+          #  카테고리 무관/전용 API가 필요하면 config.dropxl.example.yaml(월 30유로)
+          #  또는 config.bigbuy.example.yaml(월 69~99유로)로 이 항목을 바꾸면 됨)
+          - label: syncee-nl
+            config: config.syncee.example.yaml
             shopify_shop_secret: SHOPIFY_SHOP_NL
             shopify_token_secret: SHOPIFY_ACCESS_TOKEN_NL
     defaults:
