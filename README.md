@@ -151,35 +151,122 @@ IBKR's website/app and has nothing to do with the code in this repo.
    this is what step "Running against IBKR paper trading" below uses,
    and there's no reason to skip straight to real money.
 
-### Running against IBKR paper trading
+### Installing TWS / IB Gateway and enabling the API (detailed walkthrough)
 
-1. Install [Trader Workstation (TWS)](https://www.interactivebrokers.com/en/trading/tws.php)
-   or **IB Gateway** (same API, no charts/UI — lighter weight and
-   generally preferred for running a bot unattended), and log in with
-   your **paper trading** username (IBKR appends something like `abc123`
-   to your live username for the paper login — check Client Portal →
-   Settings → Paper Trading Account for the exact credentials).
-2. In TWS/Gateway: `Configuration/Edit → Global Configuration → API → Settings`
-   → check **"Enable ActiveX and Socket Clients"**, and note the socket
-   port (default `7497` for TWS paper, `4002` for Gateway paper). Also
-   consider unchecking "Read-Only API" (it's checked by default and
-   would silently block every order Kronos tries to place).
-3. Under the same API Settings, add `127.0.0.1` to **"Trusted IPs"** if
-   Kronos runs on the same machine (the default and recommended setup —
-   see the security note below if not).
-4. Set `ibkr.port` in your config (or `KRONOS_IBKR_PORT`) to match, and
-   `ibkr.client_id` to any integer not already used by another API
-   connection to the same TWS/Gateway instance.
-5. TWS/Gateway must be **running and logged in** for `IBKRBroker.connect()`
-   to succeed — there is no purely-cloud/headless mode; think of it as
-   the always-on bridge between Kronos and IBKR's servers. IBKR also
-   auto-logs-out TWS roughly once every 24 hours, so a long-running bot
-   needs either the auto-restart setting in TWS or IB Gateway's simpler
-   daily-restart behavior.
-6. Even with `live_trading=true` against a paper account, all the same
-   risk limits and the approval prompt still apply — this is the right
-   place to rehearse the full flow (including a few real BUY/SELL round
-   trips) before ever touching a live account.
+`ib_insync` (what `kronos/broker/ibkr.py` uses) does not talk to IBKR's
+cloud directly — it talks over a local socket to a copy of **Trader
+Workstation (TWS)** or **IB Gateway** running somewhere reachable from
+Kronos. That local program is the only thing actually authenticated to
+IBKR; Kronos just connects to it. So this step has to work before
+anything in `kronos/` can reach a real (or paper) account.
+
+**1. Choose TWS or IB Gateway.**
+- **TWS** is the full desktop trading platform (charts, order book,
+  scanners, ...). Heavier, but useful while you're still watching what
+  the bot does by hand.
+- **IB Gateway** is the same API/connection engine with no trading UI —
+  smaller, uses less memory, and is what IBKR recommends for running an
+  automated client like Kronos unattended on a server. The API setup
+  below is identical for both; only the menu layout differs slightly.
+
+Download from the [IBKR software page](https://www.interactivebrokers.com/en/trading/ibgateway-stable.php)
+(pick "Stable" unless you specifically need the "Latest" beta channel —
+stable is what you want for something that trades real money) and
+install for your OS (Windows/macOS/Linux all supported; on Linux it's a
+`.sh` installer you run with `bash`).
+
+**2. Log in.**
+Launch TWS or IB Gateway. On the login screen:
+- Pick **"IB API"** (not "FIX API") if IB Gateway asks which mode.
+- Use the **Paper Trading** radio button/toggle and your paper
+  username the first few times (see "Opening and configuring your IBKR
+  account" above — the paper login is a separate username IBKR
+  auto-generates, not your live one with a flag). Switch to your live
+  username only once you're actually going live.
+- There's a small gear/settings icon on the login screen itself
+  ("Configure API settings before login") — you can preconfigure the
+  API port and Trusted IPs there without fully logging in first, which
+  is convenient on a fresh install.
+
+**3. Enable the API.**
+Once logged in: `File → Global Configuration` (macOS: the app menu
+instead of `File`) → left sidebar `API → Settings`. Set:
+- ☑ **Enable ActiveX and Socket Clients** — the master switch; without
+  this, `connect()` will simply time out.
+- ☐ **Read-Only API** — **uncheck** this. It's checked by default on
+  fresh installs and silently blocks every order Kronos tries to place
+  (reads like account/positions still work, which makes this a
+  confusing failure to debug — the order just never appears at IBKR
+  with no error on the TWS side).
+- **Socket port** — note the value, default `7497` for TWS paper,
+  `7496` for TWS live, `4002` for Gateway paper, `4001` for Gateway
+  live. This must match `ibkr.port` / `KRONOS_IBKR_PORT` exactly.
+- **Trusted IP Addresses** → add `127.0.0.1` if Kronos runs on the same
+  machine (the default, recommended setup). If Kronos runs elsewhere,
+  add its IP here instead of opening the port to everyone — see the
+  security note further down.
+- ☑ **Create API message log file** is worth turning on the first time;
+  it gives you a real transcript to read when a connection or order
+  silently fails.
+- Leave **Master API client ID** blank unless you specifically want to
+  restrict which `client_id` values may connect.
+- Click **Apply**, then **OK**.
+
+**4. Point Kronos at it.**
+In `config/kronos.yaml` (or via `KRONOS_IBKR_*` env vars):
+```yaml
+ibkr:
+  host: 127.0.0.1
+  port: 7497        # must match the socket port from step 3
+  client_id: 7       # any integer not already used by another API client on this TWS/Gateway
+  account: null      # your account id, or leave null for the default
+```
+Each simultaneous connection (Kronos, plus e.g. an `ib_insync` Jupyter
+notebook you might also have open) needs its own unique `client_id` —
+reusing one that's already connected causes IBKR to silently disconnect
+the older session.
+
+**5. Verify the connection** before trusting Kronos with it:
+```bash
+python -c "
+from ib_insync import IB
+ib = IB()
+ib.connect('127.0.0.1', 7497, clientId=7)
+print('Connected:', ib.isConnected())
+print(ib.accountSummary())
+ib.disconnect()
+"
+```
+If this hangs or raises `TimeoutError`, the API isn't enabled or the
+port doesn't match (step 3). If it connects but `accountSummary()` is
+empty, you're likely not logged into the account you expect, or the
+paper/live account pairing is off.
+
+**6. Keep it running.** TWS/Gateway must be **open and logged in**
+whenever Kronos runs — there's no headless "just an API key" mode, this
+local program is the whole authenticated bridge to IBKR. Two things to
+configure for anything longer than a manual test session:
+- IBKR force-logs-out TWS/Gateway roughly once every 24 hours for
+  maintenance. Under `Configuration → Lock and Exit`, enable
+  **Auto restart** (TWS) so it restarts itself and reconnects instead
+  of just sitting disconnected until you notice.
+- Consider running IB Gateway under a process supervisor (systemd,
+  `supervisord`, a `screen`/`tmux` session at minimum) so it comes back
+  after a machine reboot or crash.
+
+**7. Common connection errors:**
+| Symptom | Likely cause |
+|---|---|
+| `TimeoutError` / connection refused | API not enabled, or wrong port |
+| Connects, then immediately disconnects | `client_id` already in use by another session |
+| Orders never show up in TWS, no error | "Read-Only API" still checked |
+| `reqMktData` returns `NaN`/stale price | missing market data subscription (see account setup above), or market is closed |
+| Works, then silently stops after ~24h | daily forced logout — enable auto-restart |
+
+Once connected, all the same risk limits and the approval prompt in
+Kronos still apply against a paper account — this is the right place to
+rehearse the full flow (including a few real BUY/SELL round trips)
+before ever touching a live account.
 
 ### Going live (real money)
 
