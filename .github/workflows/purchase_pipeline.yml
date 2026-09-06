@@ -18,9 +18,11 @@ jobs:
             config: config.ownerclan.example.yaml
             shopify_shop_secret: SHOPIFY_SHOP_KR
             shopify_token_secret: SHOPIFY_ACCESS_TOKEN_KR
-          # 네덜란드/EU 판매 채널(Amazon.nl/Amazon.de + 자사몰) - BigBuy 소싱
-          - label: bigbuy-nl
-            config: config.bigbuy.example.yaml
+          # 네덜란드/EU 판매 채널(Amazon.nl/Amazon.de + 자사몰) - dropXL 소싱
+          # (BigBuy는 월 69~99유로+가입비로 비용이 높아 월 30유로인 dropXL로 교체함;
+          #  config.bigbuy.example.yaml은 계속 사용 가능하니 원하면 이 항목을 되돌리면 됨)
+          - label: dropxl-nl
+            config: config.dropxl.example.yaml
             shopify_shop_secret: SHOPIFY_SHOP_NL
             shopify_token_secret: SHOPIFY_ACCESS_TOKEN_NL
     defaults:
@@ -30,6 +32,8 @@ jobs:
       OWNERCLAN_CLIENT_ID: ${{ secrets.OWNERCLAN_CLIENT_ID }}
       OWNERCLAN_CLIENT_SECRET: ${{ secrets.OWNERCLAN_CLIENT_SECRET }}
       BIGBUY_API_KEY: ${{ secrets.BIGBUY_API_KEY }}
+      DROPXL_FEED_URL: ${{ secrets.DROPXL_FEED_URL }}
+      DROPXL_API_KEY: ${{ secrets.DROPXL_API_KEY }}
       SHOPIFY_SHOP: ${{ secrets[matrix.shopify_shop_secret] }}
       SHOPIFY_ACCESS_TOKEN: ${{ secrets[matrix.shopify_token_secret] }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

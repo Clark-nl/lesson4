@@ -1,0 +1,6 @@
+sku,name,wholesale_price,retail_price,stock,category,image_url
+DXL-3001,Garden Storage Box 400L,24.50,59.95,80,Garden,https://example.com/images/dxl-3001.jpg
+DXL-3002,Folding Camping Chair,9.90,24.95,200,Sports & Outdoor,https://example.com/images/dxl-3002.jpg
+DXL-3003,Kids Wooden Play Kitchen,32.00,79.95,5,Toys,https://example.com/images/dxl-3003.jpg
+DXL-3004,Low Stock Patio Heater,45.00,89.95,1,Garden,https://example.com/images/dxl-3004.jpg
+DXL-3005,Low Margin Doormat,8.00,8.50,150,Home,https://example.com/images/dxl-3005.jpg
