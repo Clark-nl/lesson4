@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shopify 연동 빌더</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <h1>Shopify 연동 빌더</h1>
+      <p class="subtitle">Shopify 스토어를 연동하고, 상품을 골라 나만의 쇼핑몰 랜딩 페이지를 자동 생성하세요.</p>
+    </header>
+
+    <section id="connect-panel" class="panel">
+      <h2>1. 스토어 연동</h2>
+      <form id="connect-form">
+        <label for="shop">Shopify 스토어 도메인</label>
+        <div class="input-row">
+          <input id="shop" name="shop" type="text" placeholder="your-store.myshopify.com" required />
+          <button type="submit">Shopify 연동하기</button>
+        </div>
+      </form>
+      <p id="connect-status" class="status"></p>
+    </section>
+
+    <section id="builder-panel" class="panel hidden">
+      <h2>2. 상품 선택 &amp; 빌더 설정</h2>
+      <div class="builder-grid">
+        <div class="builder-config">
+          <label for="storeName">스토어 이름</label>
+          <input id="storeName" type="text" placeholder="예: 클락 편집샵" />
+
+          <label for="tagline">태그라인</label>
+          <input id="tagline" type="text" placeholder="예: 매일 새로운 아이템" />
+
+          <label for="theme">테마</label>
+          <select id="theme">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="mint">Mint</option>
+          </select>
+
+          <button id="build-btn" type="button" disabled>선택한 상품으로 페이지 생성</button>
+          <p id="build-status" class="status"></p>
+        </div>
+
+        <div class="product-picker">
+          <div class="product-picker-head">
+            <span id="selected-count">0개 선택됨</span>
+            <button id="refresh-products" type="button">상품 새로고침</button>
+          </div>
+          <div id="product-list" class="product-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="preview-panel" class="panel hidden">
+      <h2>3. 미리보기 &amp; 다운로드</h2>
+      <div class="preview-actions">
+        <button id="download-btn" type="button">HTML 파일 다운로드</button>
+      </div>
+      <iframe id="preview-frame" title="스토어 미리보기"></iframe>
+    </section>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

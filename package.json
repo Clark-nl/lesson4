@@ -1,0 +1,20 @@
+{
+  "name": "shopify-builder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shopify 연동 쇼핑몰 빌더 - OAuth 연동, 상품 데이터 조회, 정적 스토어 페이지 빌더",
+  "type": "commonjs",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}
