@@ -18,6 +18,7 @@ Claude API(Opus 5)와 도구 호출(tool use)을 이용해 1인 드롭쉬핑 셀
 | 주문 처리 자동화 | `process_order` | 신규 주문을 공급업체로 발주 처리, 발주번호/예상 배송일 생성 |
 | 고객 응대 챗봇 | `lookup_order_status` | 고객 문의에 응답할 주문/배송 상태 조회 |
 | 매출 리포트 | `get_sales_summary` | 이번 달 누적 매출, 목표(100만원) 대비 달성률, 필요한 일 매출 페이스 계산 |
+| 중국 공급업체 커스터마이징 협의 | `send_customization_request`, `search_supplier_emails`, `get_thread_summary` | 로고 인쇄/포장/사양 변경 등 커스터마이징 요청 이메일을 Gmail로 발송하고 회신을 검색/조회 |
 
 상품/주문 데이터는 `dropshipping_agent/data/*.json`의 모의(mock) 데이터를 사용하며,
 실제 서비스로 확장할 때는 `store.py`를 실제 DB나 공급업체 API 연동으로 교체하면 됩니다.
@@ -28,6 +29,15 @@ Claude API(Opus 5)와 도구 호출(tool use)을 이용해 1인 드롭쉬핑 셀
 pip install -r requirements.txt
 cp .env.example .env   # .env 파일에 ANTHROPIC_API_KEY 입력
 ```
+
+### Gmail 연동 설정 (중국 공급업체 커스터마이징 이메일 기능)
+
+이 기능은 실제 Gmail 계정으로 이메일을 보내고 읽으므로 OAuth 인증이 필요합니다.
+
+1. [Google Cloud Console](https://console.cloud.google.com/)에서 프로젝트를 만들고 **Gmail API**를 활성화합니다.
+2. "OAuth 클라이언트 ID"를 **데스크톱 앱** 유형으로 생성하고, `credentials.json`으로 다운로드해 프로젝트 루트(`lesson4/`)에 둡니다.
+3. Gmail 관련 도구(`send_customization_request` 등)를 처음 호출하면 브라우저가 열리며 로그인/동의 화면이 뜨고, 인증이 끝나면 `token.json`이 자동 생성되어 이후에는 재인증 없이 사용됩니다.
+4. `credentials.json`, `token.json`은 민감 정보이므로 절대 커밋하지 마세요 (`.gitignore`에 이미 등록되어 있습니다).
 
 ## 실행
 
@@ -51,12 +61,14 @@ python -m tests.test_tools
 
 ```
 dropshipping_agent/
-  config.py    # 모델, 수수료율, 목표 매출 등 설정값
-  store.py     # 모의 상품/주문 데이터 접근 계층
-  tools.py     # 도구 정의(JSON 스키마) + 실제 구현 로직
-  agent.py     # Claude 도구 호출 루프를 직접 관리하는 에이전트
-  cli.py       # 대화형/데모 CLI 진입점
-  data/        # 모의 상품 카탈로그, 주문 데이터 (JSON)
+  config.py       # 모델, 수수료율, 목표 매출, Gmail 경로 등 설정값
+  store.py        # 모의 상품/주문 데이터 접근 계층
+  tools.py        # 도구 정의(JSON 스키마) + 실제 구현 로직 (Gmail 도구 포함)
+  gmail_client.py # Gmail API OAuth2 인증/서비스 생성
+  gmail_tools.py  # 중국 공급업체 커스터마이징 이메일 발송/검색/조회 도구
+  agent.py        # Claude 도구 호출 루프를 직접 관리하는 에이전트
+  cli.py          # 대화형/데모 CLI 진입점
+  data/           # 모의 상품 카탈로그, 주문 데이터 (JSON)
 tests/
   test_tools.py  # 오프라인(비-API) 로직 테스트
 ```

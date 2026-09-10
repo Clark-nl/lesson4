@@ -23,3 +23,12 @@ TARGET_MONTHLY_REVENUE_KRW = 1_000_000
 
 # 재고 경고 임계값: 공급가가 기준가 대비 이 비율(%) 이상 오르면 가격 재조정 필요로 표시
 PRICE_ALERT_THRESHOLD_PCT = 5.0
+
+# Gmail 연동 (중국 공급업체 제품 커스터마이징 협의용)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+GMAIL_CREDENTIALS_PATH = PROJECT_ROOT / "credentials.json"
+GMAIL_TOKEN_PATH = PROJECT_ROOT / "token.json"
+GMAIL_SCOPES = [
+    "https://www.googleapis.com/auth/gmail.send",
+    "https://www.googleapis.com/auth/gmail.readonly",
+]

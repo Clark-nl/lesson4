@@ -10,7 +10,7 @@ import math
 from datetime import date, datetime, timedelta
 from typing import Any
 
-from . import config, store
+from . import config, gmail_tools, store
 
 # ---------------------------------------------------------------------------
 # 도구 구현
@@ -34,6 +34,7 @@ def search_products(keyword: str, max_results: int = 5) -> dict[str, Any]:
             "name": p["name"],
             "category": p["category"],
             "supplier": p["supplier"],
+            "supplier_email": p["supplier_email"],
             "supplier_rating": p["supplier_rating"],
             "current_supplier_price_krw": p["current_supplier_price_krw"],
             "shipping_days": p["shipping_days"],
@@ -308,6 +309,8 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
     },
 ]
 
+TOOL_SCHEMAS.extend(gmail_tools.GMAIL_TOOL_SCHEMAS)
+
 _TOOL_FUNCS = {
     "search_products": search_products,
     "calculate_pricing": calculate_pricing,
@@ -315,6 +318,9 @@ _TOOL_FUNCS = {
     "process_order": process_order,
     "lookup_order_status": lookup_order_status,
     "get_sales_summary": get_sales_summary,
+    "send_customization_request": gmail_tools.send_customization_request,
+    "search_supplier_emails": gmail_tools.search_supplier_emails,
+    "get_thread_summary": gmail_tools.get_thread_summary,
 }
 
 
