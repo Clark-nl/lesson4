@@ -1,0 +1,68 @@
+[
+  {
+    "order_id": "O1001",
+    "product_id": "P001",
+    "customer_name": "김민서",
+    "quantity": 2,
+    "unit_price_krw": 19900,
+    "order_date": "2026-09-01",
+    "status": "delivered",
+    "supplier_order_no": "SUP-4471",
+    "tracking_no": "KR-TRK-88213"
+  },
+  {
+    "order_id": "O1002",
+    "product_id": "P003",
+    "customer_name": "이도윤",
+    "quantity": 1,
+    "unit_price_krw": 15900,
+    "order_date": "2026-09-02",
+    "status": "shipped",
+    "supplier_order_no": "SUP-4472",
+    "tracking_no": "KR-TRK-88214"
+  },
+  {
+    "order_id": "O1003",
+    "product_id": "P007",
+    "customer_name": "박서연",
+    "quantity": 1,
+    "unit_price_krw": 24900,
+    "order_date": "2026-09-03",
+    "status": "placed_with_supplier",
+    "supplier_order_no": "SUP-4488",
+    "tracking_no": null
+  },
+  {
+    "order_id": "O1004",
+    "product_id": "P005",
+    "customer_name": "최지호",
+    "quantity": 1,
+    "unit_price_krw": 11900,
+    "order_date": "2026-09-05",
+    "status": "new",
+    "supplier_order_no": null,
+    "tracking_no": null
+  },
+  {
+    "order_id": "O1005",
+    "product_id": "P002",
+    "customer_name": "정하은",
+    "quantity": 3,
+    "unit_price_krw": 5900,
+    "order_date": "2026-09-06",
+    "status": "new",
+    "supplier_order_no": null,
+    "tracking_no": null
+  },
+  {
+    "order_id": "O1006",
+    "product_id": "P008",
+    "customer_name": "한유진",
+    "quantity": 1,
+    "unit_price_krw": 14900,
+    "order_date": "2026-09-07",
+    "status": "new",
+    "supplier_order_no": null,
+    "tracking_no": null
+  }
+]
