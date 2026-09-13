@@ -23,9 +23,22 @@ def run(dry_run_fixture: str | None = None) -> None:
         products = client.fetch_expected_purchase_items()
 
     logger.info("Fetched %d recommended product(s).", len(products))
+    if not products:
+        logger.warning(
+            "No products were parsed out of the page. This almost always means "
+            "SELECTOR_PRODUCT_CARD/NAME/PRICE/LINK in .env don't match the real "
+            "site markup yet — see the '셀렉터 조정' section in README.md."
+        )
 
     watched = filter_watched(products, config.WATCH_KEYWORDS)
     logger.info("%d product(s) matched the watch list.", len(watched))
+    if products and not watched:
+        logger.warning(
+            "Products were found but none matched WATCH_KEYWORDS=%s; "
+            "no email will be sent. Widen the keywords or clear the setting "
+            "to alert on every recommended item.",
+            config.WATCH_KEYWORDS,
+        )
 
     notifier.send_alert(watched)
 

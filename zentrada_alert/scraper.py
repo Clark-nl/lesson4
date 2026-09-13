@@ -43,10 +43,29 @@ class ZentradaClient:
         )
         response.raise_for_status()
 
+        # Heuristic: most login forms redirect away from the login page on
+        # success and re-render it (same path) on failure. This can't be
+        # exact without knowing the real site's behavior, but it turns a
+        # silent bad-login into a loud one instead of quietly scraping an
+        # unauthenticated (likely empty) page afterwards.
+        if config.ZENTRADA_LOGIN_PATH in response.url:
+            raise ZentradaAuthError(
+                "Login POST stayed on the login page — credentials or "
+                "LOGIN_FORM_USERNAME_FIELD/LOGIN_FORM_PASSWORD_FIELD are "
+                "probably wrong. Check the real login form in devtools."
+            )
+
     def fetch_recommendations_html(self) -> str:
         url = urljoin(config.ZENTRADA_BASE_URL, config.ZENTRADA_RECOMMENDATIONS_PATH)
         response = self.session.get(url, timeout=config.REQUEST_TIMEOUT_SECONDS)
         response.raise_for_status()
+
+        if config.ZENTRADA_LOGIN_PATH in response.url:
+            raise ZentradaAuthError(
+                "Fetching the recommendations page redirected back to the "
+                "login page — the session isn't authenticated."
+            )
+
         return response.text
 
     def fetch_expected_purchase_items(self) -> list[Product]:
